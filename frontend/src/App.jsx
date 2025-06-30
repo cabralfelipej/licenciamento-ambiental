@@ -10,7 +10,11 @@ import { GoogleCalendarIntegration } from './components/GoogleCalendarIntegratio
 import './App.css'
 
 // Definindo a URL base da API do backend
-const API_BASE_URL = 'https://licenciamento-backend.onrender.com';
+// Prioriza a variável de ambiente, com fallback para o localhost (desenvolvimento) ou uma URL de produção hardcoded se necessário.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+// Se souber a URL de produção final do backend no Render, pode usar como fallback final:
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://seu-backend-no-render.onrender.com';
+
 
 // Componente do Dashboard
 function Dashboard({ resumo } ) {
