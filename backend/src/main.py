@@ -19,8 +19,12 @@ def create_app(config_overrides=None):
     app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT' # Mantenha ou substitua por uma chave segura
 
     # Configurações padrão
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith('postgres://'): # Render usa postgres://
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
     app.config.from_mapping(
-        SQLALCHEMY_DATABASE_URI=f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}",
+        SQLALCHEMY_DATABASE_URI=database_url or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}", # Fallback para SQLite localmente
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=os.path.join(os.path.dirname(__file__), 'uploads') # Pasta padrão para uploads
     )
