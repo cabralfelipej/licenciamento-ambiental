@@ -22,111 +22,109 @@ export function GestaoCondicionantes() {
   const [cumprimentoDialogOpen, setCumprimentoDialogOpen] = useState(false)
   const [condicionanteParaCumprir, setCondicionanteParaCumprir] = useState(null)
   const [cumprimentoFormData, setCumprimentoFormData] = useState({
-    data_cumprimento: null,
+    data_cumprimento: null, // Será new Date() no handleOpen
     data_envio_comprovante: null,
-    anexo_comprovante: null,
+    anexo_comprovante: null, // Será File object ou null
     observacoes_cumprimento: ''
-  })
+  });
   const [formData, setFormData] = useState({
     licenca_id: '',
     descricao: '',
     prazo_dias: '',
-    data_limite: '',
+    data_limite: '', // YYYY-MM-DD
     responsavel: '',
     observacoes: '',
-  })
+  });
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
+  const fetchCondicionantesELicencas = async () => {
+    setLoading(true);
+    try {
+      const [condicionantesRes, licencasRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/condicionantes`),
+        fetch(`${API_BASE_URL}/api/licencas?flat=true`) // Supondo um param flat para estrutura simples
+      ]);
+
+      if (!condicionantesRes.ok) throw new Error(`Erro ao buscar condicionantes: ${condicionantesRes.status}`);
+      if (!licencasRes.ok) throw new Error(`Erro ao buscar licenças: ${licencasRes.status}`);
+
+      const condicionantesData = await condicionantesRes.json();
+      const licencasData = await licencasRes.json();
+
+      const hoje = new Date();
+      const condicionantesComDias = condicionantesData.map(c => ({
+        ...c,
+        dias_restantes: c.data_limite ? Math.floor((new Date(c.data_limite) - hoje) / (1000 * 60 * 60 * 24)) : null,
+        // Garante que o status seja 'cumprida' se data_envio_cumprimento existir, backend deve cuidar disso mas é uma segurança.
+        status: c.data_envio_cumprimento ? 'cumprida' : c.status,
+        cumprida: !!c.data_envio_cumprimento, // Ou baseado no status 'cumprida' vindo do backend
+        licenca_numero: c.licenca?.numero_licenca || 'N/A', // Ajustar conforme estrutura da API
+        empresa_nome: c.empresa?.razao_social || 'N/A' // Ajustar conforme estrutura da API
+      }));
+
+      setCondicionantes(condicionantesComDias);
+      // Mapear licenças para o formato esperado pelo Select, incluindo empresa_nome
+      setLicencas(licencasData.map(l => ({
+        id: l.id,
+        numero: l.numero_licenca, // Ajustar se o nome do campo for diferente
+        tipo: l.tipo_licenca,
+        empresa_nome: l.empresa?.razao_social || 'Empresa Desconhecida' // Ajustar se necessário
+      })));
+
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      // Adicionar feedback de erro para o usuário
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const condicionantesSimuladas = [
-          {
-            id: 1, licenca_id: 1, licenca_numero: 'LO-001/2024', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA',
-            descricao: 'Renovação da Licença de Operação seja solicitada 120 (cento e vinte) dias antes do seu vencimento.',
-            prazo_dias: 120, data_limite: '2025-09-17', responsavel: 'Departamento Ambiental', status: 'pendente',
-            observacoes: 'Prazo crítico para renovação da licença', cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-          },
-          {
-            id: 2, licenca_id: 1, licenca_numero: 'LO-001/2024', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA',
-            descricao: 'Apresentar ao IMA/AL o Relatório de Avaliação de Desempenho Ambiental - RADA.',
-            prazo_dias: null, data_limite: '2025-07-18', responsavel: 'Consultoria Ambiental', status: 'pendente',
-            observacoes: 'Relatório anual obrigatório', cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-          },
-          {
-            id: 5, licenca_id: 1, licenca_numero: 'LO-001/2024', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA',
-            descricao: 'Realizar, ANUALMENTE, a limpeza e manutenção do sistema de esgotamento sanitário.',
-            prazo_dias: 365, data_limite: '2025-12-31', responsavel: 'Manutenção Predial', status: 'pendente',
-            observacoes: 'Manutenção anual do sistema', cumprida: true, data_cumprimento: '2024-05-10', data_envio_comprovante: '2024-05-11', anexo_comprovante: 'comprovante_limpeza_fossa.pdf', observacoes_cumprimento: 'Serviço realizado pela LimpaTudo Ltda.',
-          },
-          {
-            id: 3, licenca_id: 2, licenca_numero: 'LP-002/2024', empresa_nome: 'EMPRESA EXEMPLO LTDA',
-            descricao: 'Apresentar ao IMA/AL os Certificados de Destinação Final - CDF dos Resíduos Sólidos e Líquidos.',
-            prazo_dias: 30, data_limite: '2025-07-30', responsavel: 'Setor de Resíduos', status: 'pendente',
-            observacoes: 'Certificados trimestrais', cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-          }
-        ];
-         // Adicionar dias_restantes dinamicamente
-        const hoje = new Date();
-        const condicionantesComDias = condicionantesSimuladas.map(c => ({
-            ...c,
-            dias_restantes: c.data_limite ? Math.floor((new Date(c.data_limite) - hoje) / (1000 * 60 * 60 * 24)) : null
-        }));
-
-        const licencasSimuladas = [
-          { id: 1, numero: 'LO-001/2024', tipo: 'Licença de Operação', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE' },
-          { id: 2, numero: 'LP-002/2024', tipo: 'Licença Prévia', empresa_nome: 'EMPRESA EXEMPLO LTDA' },
-          { id: 3, numero: 'LI-003/2023', tipo: 'Licença de Instalação', empresa_nome: 'INDÚSTRIA MODELO SA' }
-        ];
-        setCondicionantes(condicionantesComDias);
-        setLicencas(licencasSimuladas);
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    fetchCondicionantesELicencas();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const dataLimiteCalculada = formData.data_limite ||
-        (formData.prazo_dias ? new Date(Date.now() + parseInt(formData.prazo_dias) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : '');
-      
-      const licencaAssociada = licencas.find(l => l.id == formData.licenca_id);
-      const diasRestantesCalc = dataLimiteCalculada ? Math.floor((new Date(dataLimiteCalculada) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+      let payload = { ...formData };
+      if (payload.prazo_dias) payload.prazo_dias = parseInt(payload.prazo_dias);
+      if (!payload.data_limite) delete payload.data_limite; // Envia nulo se vazio
+      if (!payload.prazo_dias) delete payload.prazo_dias; // Envia nulo se vazio
 
-      if (editingCondicionante) {
-        setCondicionantes(prev => prev.map(c =>
-          c.id === editingCondicionante.id
-            ? { ...c, ...formData, licenca_id: parseInt(formData.licenca_id), data_limite: dataLimiteCalculada,
-                licenca_numero: licencaAssociada?.numero, empresa_nome: licencaAssociada?.empresa_nome, dias_restantes: diasRestantesCalc }
-            : c
-        ));
-      } else {
-        const novaCondicionante = {
-          id: Date.now(), ...formData, licenca_id: parseInt(formData.licenca_id), data_limite: dataLimiteCalculada,
-          licenca_numero: licencaAssociada?.numero, empresa_nome: licencaAssociada?.empresa_nome,
-          status: 'pendente', cumprida: false, dias_restantes: diasRestantesCalc,
-          data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: '',
-        };
-        setCondicionantes(prev => [...prev, novaCondicionante]);
+      const method = editingCondicionante ? 'PUT' : 'POST';
+      const url = editingCondicionante
+        ? `${API_BASE_URL}/api/condicionantes/${editingCondicionante.id}`
+        : `${API_BASE_URL}/api/condicionantes`;
+
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
       }
+
+      fetchCondicionantesELicencas();
       setDialogOpen(false);
       resetForm();
     } catch (error) {
       console.error('Erro ao salvar condicionante:', error);
+      alert(`Erro ao salvar condicionante: ${error.message}`);
     }
   };
 
   const handleEdit = (condicionante) => {
-    const { cumprida, data_cumprimento, data_envio_comprovante, anexo_comprovante, observacoes_cumprimento, ...editData } = condicionante;
     setFormData({
-      ...editData,
       licenca_id: condicionante.licenca_id.toString(),
+      descricao: condicionante.descricao,
       prazo_dias: condicionante.prazo_dias?.toString() || '',
+      data_limite: condicionante.data_limite || '',
+      responsavel: condicionante.responsavel || '',
+      observacoes: condicionante.observacoes || '',
     });
     setEditingCondicionante(condicionante);
     setDialogOpen(true);
@@ -134,41 +132,73 @@ export function GestaoCondicionantes() {
 
   const handleDelete = async (id) => {
     if (confirm('Tem certeza que deseja excluir esta condicionante?')) {
-      setCondicionantes(prev => prev.filter(c => c.id !== id));
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/condicionantes/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+        }
+        fetchCondicionantesELicencas();
+      } catch (error) {
+        console.error('Erro ao excluir condicionante:', error);
+        alert(`Erro ao excluir condicionante: ${error.message}`);
+      }
     }
   };
 
   const handleOpenCumprimentoDialog = (condicionante) => {
     setCondicionanteParaCumprir(condicionante);
     setCumprimentoFormData({
-      data_cumprimento: condicionante.data_cumprimento ? new Date(condicionante.data_cumprimento) : new Date(),
-      data_envio_comprovante: condicionante.data_envio_comprovante ? new Date(condicionante.data_envio_comprovante) : null,
-      anexo_comprovante: condicionante.anexo_comprovante || null,
+      data_cumprimento: condicionante.data_envio_cumprimento // Backend usa data_envio_cumprimento como data de cumprimento efetivo
+        ? new Date(condicionante.data_envio_cumprimento + "T00:00:00") // Adiciona T00:00:00 para evitar problemas de fuso ao converter para Date
+        : new Date(),
+      data_envio_comprovante: condicionante.data_envio_comprovante // Se já tiver, usa. Backend pode usar este campo.
+        ? new Date(condicionante.data_envio_comprovante + "T00:00:00")
+        : null,
+      anexo_comprovante: null, // Sempre reseta o anexo para um novo upload ou nenhum
       observacoes_cumprimento: condicionante.observacoes_cumprimento || ''
     });
     setCumprimentoDialogOpen(true);
   };
 
-  const handleSaveCumprimento = () => {
+  const handleSaveCumprimento = async () => {
     if (!condicionanteParaCumprir || !cumprimentoFormData.data_cumprimento) {
       alert("Data de cumprimento é obrigatória.");
       return;
     }
-    setCondicionantes(prev => prev.map(cond =>
-      cond.id === condicionanteParaCumprir.id
-        ? {
-            ...cond, status: 'cumprida', cumprida: true,
-            data_cumprimento: format(cumprimentoFormData.data_cumprimento, "yyyy-MM-dd"),
-            data_envio_comprovante: cumprimentoFormData.data_envio_comprovante ? format(cumprimentoFormData.data_envio_comprovante, "yyyy-MM-dd") : null,
-            anexo_comprovante: cumprimentoFormData.anexo_comprovante instanceof File
-              ? cumprimentoFormData.anexo_comprovante.name
-              : cumprimentoFormData.anexo_comprovante,
-            observacoes_cumprimento: cumprimentoFormData.observacoes_cumprimento
-          }
-        : cond
-    ));
-    setCumprimentoDialogOpen(false);
-    resetCumprimentoForm();
+
+    const payload = new FormData(); // Usar FormData para enviar arquivos
+
+    // Formata a data_envio_cumprimento para YYYY-MM-DD, que será a data do cumprimento
+    payload.append('data_envio_cumprimento', format(cumprimentoFormData.data_cumprimento, "yyyy-MM-dd"));
+
+    if (cumprimentoFormData.observacoes_cumprimento) {
+      payload.append('observacoes', cumprimentoFormData.observacoes_cumprimento);
+    }
+    if (cumprimentoFormData.anexo_comprovante instanceof File) {
+      payload.append('comprovante', cumprimentoFormData.anexo_comprovante);
+    }
+
+    // Não precisamos enviar data_cumprimento separadamente se o backend usa data_envio_cumprimento
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/condicionantes/${condicionanteParaCumprir.id}/marcar-cumprida`, {
+        method: 'POST',
+        body: payload, // Não definir Content-Type, o navegador fará isso automaticamente para FormData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+      }
+
+      fetchCondicionantesELicencas();
+      setCumprimentoDialogOpen(false);
+      resetCumprimentoForm();
+    } catch (error) {
+      console.error('Erro ao salvar cumprimento:', error);
+      alert(`Erro ao salvar cumprimento: ${error.message}`);
+    }
   };
 
   const resetForm = () => {
