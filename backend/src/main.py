@@ -19,12 +19,19 @@ def create_app(config_overrides=None):
     app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT' # Mantenha ou substitua por uma chave segura
 
     # Configurações padrão
+    # Prioriza a DATABASE_URL do ambiente, caso contrário usa a URL externa fornecida.
     database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith('postgres://'): # Render usa postgres://
+    if not database_url:
+        database_url = "postgresql://licenciamento_storage_user:yIYbB0o7ula7K0rugmLpi7OttN3DWqsX@dpg-d1i77gre5dus739dl17g-a.virginia-postgres.render.com/licenciamento_storage"
+    elif database_url.startswith('postgres://'): # Render pode fornecer a URL interna como postgres://
+        # Se for a URL interna do Render (detectada pela ausência de .render.com) e não for para testes,
+        # idealmente deveria ser trocada pela externa ou gerenciada por config.
+        # Por agora, se for 'postgres://' e não a interna completa, converte para 'postgresql://'
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
+
     app.config.from_mapping(
-        SQLALCHEMY_DATABASE_URI=database_url or f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}", # Fallback para SQLite localmente
+        SQLALCHEMY_DATABASE_URI=database_url,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=os.path.join(os.path.dirname(__file__), 'uploads') # Pasta padrão para uploads
     )
