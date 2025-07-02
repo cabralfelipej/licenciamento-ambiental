@@ -152,80 +152,86 @@ export function GestaoEmpresas() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState(null)
 
-  // Simula dados de empresas (será substituído pela API real)
-  useEffect(() => {
-    const fetchEmpresas = async () => {
-      try {
-        // Dados simulados para desenvolvimento
-        const dadosSimulados = [
-          {
-            id: 1,
-            razao_social: "CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA",
-            cnpj: "12.469.029/0001-04",
-            telefone: "(82) 3421-1234",
-            email: "contato@capa.com.br",
-            endereco: "Rua Principal, 123 - Arapiraca/AL"
-          },
-          {
-            id: 2,
-            razao_social: "EMPRESA EXEMPLO LTDA",
-            cnpj: "11.222.333/0001-44",
-            telefone: "(82) 3333-4444",
-            email: "exemplo@empresa.com",
-            endereco: "Av. Exemplo, 456 - Maceió/AL"
-          }
-        ]
-        
-        setEmpresas(dadosSimulados)
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao carregar empresas:', error)
-        setLoading(false)
-      }
-    }
+  // Hook para buscar empresas da API
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-    fetchEmpresas()
-  }, [])
+  const fetchEmpresas = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/empresas`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setEmpresas(data);
+    } catch (error) {
+      console.error('Erro ao carregar empresas:', error);
+      // Poderia adicionar um estado para exibir erro na UI
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmpresas();
+  }, []);
 
   const handleSaveEmpresa = async (formData) => {
     try {
-      if (empresaEditando) {
-        // Atualizar empresa existente
-        setEmpresas(prev => prev.map(emp => 
-          emp.id === empresaEditando.id 
-            ? { ...emp, ...formData }
-            : emp
-        ))
-      } else {
-        // Criar nova empresa
-        const novaEmpresa = {
-          id: Date.now(), // ID temporário
-          ...formData
-        }
-        setEmpresas(prev => [...prev, novaEmpresa])
+      const method = empresaEditando ? 'PUT' : 'POST';
+      const url = empresaEditando
+        ? `${API_BASE_URL}/api/empresas/${empresaEditando.id}`
+        : `${API_BASE_URL}/api/empresas`;
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
       }
-      
-      setDialogOpen(false)
-      setEmpresaEditando(null)
+
+      // const savedEmpresa = await response.json(); // Descomentar se precisar do objeto retornado
+
+      fetchEmpresas(); // Re-busca as empresas para atualizar a lista
+      setDialogOpen(false);
+      setEmpresaEditando(null);
     } catch (error) {
-      console.error('Erro ao salvar empresa:', error)
+      console.error('Erro ao salvar empresa:', error);
+      alert(`Erro ao salvar empresa: ${error.message}`); // Exibe erro para o usuário
     }
-  }
+  };
 
   const handleEditEmpresa = (empresa) => {
-    setEmpresaEditando(empresa)
-    setDialogOpen(true)
-  }
+    setEmpresaEditando(empresa);
+    setDialogOpen(true);
+  };
 
   const handleDeleteEmpresa = async (empresaId) => {
-    if (confirm('Tem certeza que deseja excluir esta empresa?')) {
+    if (confirm('Tem certeza que deseja excluir esta empresa? Essa ação não pode ser desfeita.')) {
       try {
-        setEmpresas(prev => prev.filter(emp => emp.id !== empresaId))
+        const response = await fetch(`${API_BASE_URL}/api/empresas/${empresaId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+        }
+
+        // alert((await response.json()).mensagem); // Exibe mensagem de sucesso
+        fetchEmpresas(); // Re-busca as empresas para atualizar a lista
       } catch (error) {
-        console.error('Erro ao excluir empresa:', error)
+        console.error('Erro ao excluir empresa:', error);
+        alert(`Erro ao excluir empresa: ${error.message}`);
       }
     }
-  }
+  };
 
   const handleNovaEmpresa = () => {
     setEmpresaEditando(null)

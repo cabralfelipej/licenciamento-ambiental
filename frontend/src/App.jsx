@@ -134,7 +134,16 @@ function App() {
     condicionantes_urgentes: 0,
     condicionantes_vencidas: 0,
   });
-  const [activeTab, setActiveTab] = useState("dashboard");
+  // const [activeTab, setActiveTab] = useState("dashboard");
+  // Persistência da aba ativa
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('activeLicenciamentoTab');
+    return savedTab || 'dashboard';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('activeLicenciamentoTab', activeTab);
+  }, [activeTab]);
 
   // Estados para o formulário de Licença (elevados de GestaoLicencas)
   const [licencaDialogOpen, setLicencaDialogOpen] = useState(false);
