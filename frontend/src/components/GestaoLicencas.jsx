@@ -83,90 +83,112 @@ export function GestaoLicencas({
   const [condicionantesDaLicenca, setCondicionantesDaLicenca] = useState([]);
 
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const licencasSimuladas = [
-          {
-            id: 1, empresa_id: 1, tipo: 'Licença de Operação', numero: 'LO-001/2024', orgao_emissor: 'IMA/AL',
-            data_emissao: '2024-01-15', data_validade: '2026-01-15', status: 'ativa', observacoes: 'Manter relatórios de monitoramento em dia.'
-          },
-          {
-            id: 2, empresa_id: 2, tipo: 'Licença Prévia', numero: 'LP-002/2024', orgao_emissor: 'IMA/AL',
-            data_emissao: '2024-03-10', data_validade: '2025-03-10', status: 'ativa', observacoes: 'Aguardando projeto executivo.'
-          },
-          {
-            id: 3, empresa_id: 1, tipo: 'Licença de Instalação', numero: 'LI-003/2023', orgao_emissor: 'IMA/AL',
-            data_emissao: '2023-06-20', data_validade: '2024-07-20', status: 'vencida', observacoes: 'Instalação concluída, solicitar LO.'
-          }
-        ];
-        const processadas = licencasSimuladas.map(l => {
-          const empresaNome = empresas?.find(e => e.id === l.empresa_id)?.razao_social || 'Empresa não encontrada';
-          const diasParaVencimento = Math.floor((new Date(l.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
-          return { ...l, empresa_nome: empresaNome, dias_para_vencimento: diasParaVencimento };
-        });
-        setLicencas(processadas);
-      } catch (error) {
-        console.error('Erro ao carregar dados de licenças:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (empresas) { // Carrega se 'empresas' (mesmo array vazio) for passado.
-        fetchData();
-    } else { // Se empresas for null/undefined (ainda não carregado em App.jsx)
-        setLoading(true);
-    }
-  }, [empresas, API_BASE_URL]);
-
-  const handleLocalSubmit = async (e) => {
-    e.preventDefault();
+  const fetchLicencas = async () => {
+    if (!API_BASE_URL) return; // Não tenta buscar se API_BASE_URL não estiver pronto
+    setLoading(true);
     try {
-      const empresaSelecionada = empresas.find(emp => emp.id == formData.empresa_id);
-      let licencaSalva;
-      const diasParaVencimentoCalculado = Math.floor((new Date(formData.data_validade) - new Date()) / (1000 * 60 * 60 * 24));
-
-      if (editingLicenca) {
-        licencaSalva = {
-          ...editingLicenca, ...formData,
-          empresa_nome: empresaSelecionada?.razao_social,
-          dias_para_vencimento: diasParaVencimentoCalculado,
-          status: diasParaVencimentoCalculado < 0 ? 'vencida' : 'ativa',
-        };
-        setLicencas(prev => prev.map(lic => lic.id === editingLicenca.id ? licencaSalva : lic));
-      } else {
-        licencaSalva = {
-          id: Date.now(), ...formData,
-          empresa_id: parseInt(formData.empresa_id),
-          empresa_nome: empresaSelecionada?.razao_social,
-          status: diasParaVencimentoCalculado < 0 ? 'vencida' : 'ativa',
-          dias_para_vencimento: diasParaVencimentoCalculado
-        };
-        setLicencas(prev => [...prev, licencaSalva]);
+      const response = await fetch(`${API_BASE_URL}/api/licencas`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      setDialogOpen(false);
+      const data = await response.json();
+      // O backend já deve retornar 'empresa' e 'dias_para_vencimento' no to_dict()
+      // Se não, o processamento precisaria ser feito aqui, similar ao que era feito com dados simulados
+      // mas idealmente o backend envia os dados prontos.
+      const processadas = data.map(l => ({
+        ...l,
+        // Garante que empresa_nome exista, mesmo que empresa seja null (pouco provável com bom backend)
+        empresa_nome: l.empresa?.razao_social || 'Empresa Desconhecida',
+        // dias_para_vencimento já deve vir do backend pelo método to_dict() da licença
+      }));
+      setLicencas(processadas);
+    } catch (error) {
+      console.error('Erro ao carregar licenças:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLicencas();
+    // A dependência de 'empresas' foi removida daqui, pois a lista de empresas
+    // para o select é gerenciada pelo App.jsx e passada como prop.
+    // O nome da empresa na licença agora deve vir diretamente do backend.
+  }, [API_BASE_URL]); // Adicionado API_BASE_URL como dependência
+
+  const handleSubmitLicenca = async (e) => {
+    e.preventDefault();
+    if (!API_BASE_URL) return;
+
+    const payload = {
+      ...formData,
+      // Garante que empresa_id seja um número se não for nulo/undefined
+      empresa_id: formData.empresa_id ? parseInt(formData.empresa_id) : null,
+      // Backend espera tipo_licenca, numero_licenca, data_emissao, data_vencimento
+      tipo_licenca: formData.tipo,
+      numero_licenca: formData.numero,
+      // data_emissao e data_validade já devem estar no formato YYYY-MM-DD
+    };
+    // Remover campos que não são do modelo Licenca ou que são tratados pelo backend
+    delete payload.tipo;
+    delete payload.numero;
+
+    try {
+      const method = editingLicenca ? 'PUT' : 'POST';
+      const url = editingLicenca
+        ? `${API_BASE_URL}/api/licencas/${editingLicenca.id}`
+        : `${API_BASE_URL}/api/licencas`;
+
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+      }
+      fetchLicencas(); // Re-busca para atualizar a lista
+      setDialogOpen(false); // Fecha o dialog
+      // setEditingLicenca(null); // Resetado pelo App.jsx ao fechar o dialog
     } catch (error) {
       console.error('Erro ao salvar licença:', error);
+      alert(`Erro ao salvar licença: ${error.message}`);
     }
   };
 
-  const handleLocalEdit = (licenca) => {
-    setEditingLicenca(licenca);
-    setFormData({
-      empresa_id: licenca.empresa_id.toString(), tipo: licenca.tipo, numero: licenca.numero,
-      orgao_emissor: licenca.orgao_emissor, data_emissao: licenca.data_emissao,
-      data_validade: licenca.data_validade, observacoes: licenca.observacoes || ''
+  const handleEditLicenca = (licenca) => {
+    setEditingLicenca(licenca); // App.jsx controla 'editingLicenca'
+    setFormData({ // App.jsx controla 'formData'
+      empresa_id: licenca.empresa_id.toString(),
+      tipo: licenca.tipo_licenca, // Corrigido para tipo_licenca
+      numero: licenca.numero_licenca, // Corrigido para numero_licenca
+      orgao_emissor: licenca.orgao_emissor,
+      data_emissao: licenca.data_emissao, // Formato YYYY-MM-DD
+      data_validade: licenca.data_vencimento, // Corrigido para data_vencimento e formato YYYY-MM-DD
+      observacoes: licenca.observacoes || ''
     });
-    setDialogOpen(true);
+    setDialogOpen(true); // App.jsx controla 'dialogOpen'
   };
 
-  const handleLocalDelete = async (id) => {
-    if (confirm('Tem certeza que deseja excluir esta licença?')) {
-      setLicencas(prev => prev.filter(licenca => licenca.id !== id));
-      if (licencaSelecionadaId === id) { // Se a licença excluída era a selecionada
-        setLicencaSelecionadaId(null);
-        setCondicionantesDaLicenca([]);
+  const handleDeleteLicenca = async (id) => {
+    if (!API_BASE_URL) return;
+    if (confirm('Tem certeza que deseja excluir esta licença? As condicionantes associadas também podem ser afetadas.')) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/licencas/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+        }
+        fetchLicencas(); // Re-busca para atualizar a lista
+        if (licencaSelecionadaId === id) {
+          setLicencaSelecionadaId(null);
+          setCondicionantesDaLicenca([]);
+        }
+      } catch (error) {
+        console.error('Erro ao excluir licença:', error);
+        alert(`Erro ao excluir licença: ${error.message}`);
       }
     }
   };

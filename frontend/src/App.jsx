@@ -189,61 +189,50 @@ function App() {
 
     const fetchEmpresasParaSelect = async () => {
       try {
-        // Esta é uma simulação. Idealmente, viria de uma API ou do GestaoEmpresas se já carregado.
-        // Por simplicidade, vamos usar os dados simulados que estavam em GestaoLicencas.
-        const empresasSimuladas = [
-          { id: 1, razao_social: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA' },
-          { id: 2, razao_social: 'EMPRESA EXEMPLO LTDA' },
-          { id: 3, razao_social: 'INDÚSTRIA MODELO SA' }
-        ];
-        setEmpresasParaSelect(empresasSimuladas);
+        const response = await fetch(`${API_BASE_URL}/api/empresas`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Mapeia para o formato esperado pelo Select (id, razao_social)
+        setEmpresasParaSelect(data.map(emp => ({ id: emp.id, razao_social: emp.razao_social })));
       } catch (error) {
         console.error("Erro ao buscar empresas para select:", error);
+        setEmpresasParaSelect([]); // Define como array vazio em caso de erro
+      }
+    };
+
+    const fetchTodasCondicionantes = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/condicionantes`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // O backend já deve retornar os dados processados com dias_restantes, etc.
+        // Se precisar de algum processamento adicional no frontend, fazer aqui.
+        // Por exemplo, garantir que 'cumprida' seja booleano baseado em 'status' ou 'data_envio_cumprimento'
+        const condicionantesProcessadas = data.map(c => ({
+          ...c,
+          cumprida: c.status === 'cumprida' || !!c.data_envio_cumprimento,
+          // Adicionar licenca_numero e empresa_nome se não vierem diretamente da API /api/condicionantes
+          // Isso pode exigir uma lógica mais complexa se a API /api/condicionantes não aninhar esses dados.
+          // Idealmente, a API /api/condicionantes já retorna 'licenca' e 'empresa' aninhados.
+          licenca_numero: c.licenca?.numero_licenca || c.licenca_numero || 'N/A',
+          empresa_nome: c.empresa?.razao_social || c.empresa_nome || 'N/A',
+        }));
+        setTodasAsCondicionantes(condicionantesProcessadas);
+      } catch (error) {
+        console.error("Erro ao buscar todas as condicionantes:", error);
+        setTodasAsCondicionantes([]); // Define como array vazio em caso de erro
       }
     };
 
     fetchDashboardSummary();
-    fetchEmpresasParaSelect(); // Carregar empresas para o formulário de licença
-
-    const fetchTodasCondicionantes = async () => {
-      // Simulação, dados copiados de GestaoCondicionantes.jsx para este exemplo
-      const condicionantesSimuladas = [
-        {
-            id: 1, licenca_id: 1, licenca_numero: 'LO-001/2024', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA',
-            descricao: 'Renovação da Licença de Operação seja solicitada 120 (cento e vinte) dias antes do seu vencimento.',
-            prazo_dias: 120, data_limite: '2025-09-17', responsavel: 'Departamento Ambiental', status: 'pendente', dias_restantes: 15,
-            cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-        },
-        {
-            id: 2, licenca_id: 1, licenca_numero: 'LO-001/2024', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA',
-            descricao: 'Apresentar ao IMA/AL o Relatório de Avaliação de Desempenho Ambiental - RADA.',
-            prazo_dias: null, data_limite: '2025-07-18', responsavel: 'Consultoria Ambiental', status: 'pendente', dias_restantes: 30,
-            cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-        },
-        {
-            id: 3, licenca_id: 2, licenca_numero: 'LP-002/2024', empresa_nome: 'EMPRESA EXEMPLO LTDA',
-            descricao: 'Apresentar ao IMA/AL os Certificados de Destinação Final - CDF dos Resíduos Sólidos e Líquidos.',
-            prazo_dias: 30, data_limite: '2025-07-30', responsavel: 'Setor de Resíduos', status: 'pendente', dias_restantes: 42,
-            cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-        },
-        {
-            id: 4, licenca_id: 3, licenca_numero: 'LI-003/2023', empresa_nome: 'INDÚSTRIA MODELO SA',
-            descricao: 'Registrar e manter na unidade industrial os dados de geração e destinação dos resíduos.',
-            prazo_dias: 365, data_limite: '2024-12-20', responsavel: 'Gerência Industrial', status: 'vencida', dias_restantes: -15,
-            cumprida: false, data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: null,
-        },
-        {
-            id: 5, licenca_id: 1, licenca_numero: 'LO-001/2024', empresa_nome: 'CAPA COMERCIAL ARAPIRARQUENSE DE PRODUTOS AGRÍCOLAS LTDA',
-            descricao: 'Realizar, ANUALMENTE, a limpeza e manutenção do sistema de esgotamento sanitário.',
-            prazo_dias: 365, data_limite: '2025-12-31', responsavel: 'Manutenção Predial', status: 'pendente', dias_restantes: 365,
-            cumprida: true, data_cumprimento: '2024-05-10', data_envio_comprovante: '2024-05-11', anexo_comprovante: 'comprovante_limpeza.pdf', observacoes_cumprimento: 'Realizado.'
-        }
-      ];
-      setTodasAsCondicionantes(condicionantesSimuladas);
-    };
+    fetchEmpresasParaSelect();
     fetchTodasCondicionantes();
 
-  }, []);
+  }, [API_BASE_URL]); // Adicionado API_BASE_URL como dependência para re-fetch se mudar
 
   const handleOpenNovaLicencaDialog = () => {
     resetLicencaForm(); // Reseta o formulário e a licença em edição
