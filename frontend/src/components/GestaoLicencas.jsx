@@ -247,7 +247,7 @@ export function GestaoLicencas({
             <DialogTitle>{editingLicenca ? 'Editar Licença' : 'Nova Licença'}</DialogTitle>
             <DialogDescription>Preencha os dados da licença ambiental.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleLocalSubmit} className="space-y-4 pt-4">
+          <form onSubmit={handleSubmitLicenca} className="space-y-4 pt-4">
             {/* Campos do formulário aqui (id dos inputs ajustados para evitar duplicidade se App tbm tiver forms) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -367,8 +367,8 @@ export function GestaoLicencas({
                             <Button variant="outline" size="sm" onClick={() => handleVerCondicionantes(licenca.id)} className="w-full sm:w-auto">
                                 <Eye className="h-3.5 w-3.5 mr-1.5" /> {licencaSelecionadaId === licenca.id ? "Ocultar" : "Ver"} Condicionantes ({todasAsCondicionantes?.filter(c => c.licenca_id === licenca.id).length || 0})
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleLocalEdit(licenca)} className="w-full sm:w-auto"><Edit className="h-3.5 w-3.5" /></Button>
-                            <Button variant="outline" size="sm" onClick={() => handleLocalDelete(licenca.id)} className="w-full sm:w-auto text-red-600 hover:text-red-700 dark:border-red-600 dark:hover:bg-red-700/20"><Trash2 className="h-3.5 w-3.5" /></Button>
+                            <Button variant="outline" size="sm" onClick={() => handleEditLicenca(licenca)} className="w-full sm:w-auto"><Edit className="h-3.5 w-3.5" /></Button>
+                            <Button variant="outline" size="sm" onClick={() => handleDeleteLicenca(licenca.id)} className="w-full sm:w-auto text-red-600 hover:text-red-700 dark:border-red-600 dark:hover:bg-red-700/20"><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
                         </div>
                         {licencaSelecionadaId === licenca.id && (
