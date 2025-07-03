@@ -67,9 +67,10 @@ export function GestaoCondicionantes() {
       // Mapear licenças para o formato esperado pelo Select, incluindo empresa_nome
       setLicencas(licencasData.map(l => ({
         id: l.id,
-        numero: l.numero_licenca, // Ajustar se o nome do campo for diferente
+        numero: l.numero_licenca,
         tipo: l.tipo_licenca,
-        empresa_nome: l.empresa?.razao_social || 'Empresa Desconhecida' // Ajustar se necessário
+        empresa_nome: l.empresa?.razao_social || 'Empresa Desconhecida',
+        data_emissao: l.data_emissao // Adicionar data_emissao aqui para uso no cálculo
       })));
 
     } catch (error) {
@@ -82,7 +83,35 @@ export function GestaoCondicionantes() {
 
   useEffect(() => {
     fetchCondicionantesELicencas();
-  }, []);
+  }, []); // Roda apenas uma vez ao montar o componente
+
+  // useEffect para calcular data_limite automaticamente
+  useEffect(() => {
+    if (formData.licenca_id && formData.prazo_dias) {
+      const licencaSelecionada = licencas.find(l => l.id.toString() === formData.licenca_id);
+      if (licencaSelecionada && licencaSelecionada.data_emissao) {
+        try {
+          const dataEmissao = new Date(licencaSelecionada.data_emissao + "T00:00:00"); // Adiciona T00:00:00 para evitar problemas de fuso
+          const prazoDiasNum = parseInt(formData.prazo_dias);
+          if (!isNaN(prazoDiasNum)) {
+            const novaDataLimite = new Date(dataEmissao.setDate(dataEmissao.getDate() + prazoDiasNum));
+            setFormData(prev => ({ ...prev, data_limite: format(novaDataLimite, 'yyyy-MM-dd') }));
+          }
+        } catch (error) {
+          console.error("Erro ao calcular data limite:", error);
+          // Opcional: limpar data_limite ou mostrar erro
+          setFormData(prev => ({ ...prev, data_limite: '' }));
+        }
+      } else {
+         // Licença não encontrada ou não tem data de emissão, limpar data_limite
+        setFormData(prev => ({ ...prev, data_limite: '' }));
+      }
+    }
+    // Se prazo_dias for limpo e data_limite não foi preenchida manualmente, poderia limpar data_limite aqui também.
+    // No entanto, o comportamento atual é que se data_limite for preenchida manualmente, prazo_dias é limpo.
+    // E se prazo_dias for preenchido, data_limite é sobreescrita. Isso parece ok.
+  }, [formData.licenca_id, formData.prazo_dias, licencas]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
