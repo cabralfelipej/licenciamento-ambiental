@@ -43,7 +43,7 @@ def criar_empresa():
         empresa = Empresa(
             razao_social=dados['razao_social'],
             cnpj=cnpj_limpo,
-            telefone=dados.get('telefone'),
+            # telefone=dados.get('telefone'), # Removido
             email=dados.get('email'),
             endereco=dados.get('endereco')
         )
@@ -93,9 +93,11 @@ def atualizar_empresa(empresa_id):
             empresa.cnpj = cnpj_limpo
 
         # Atualiza outros campos se fornecidos
-        for campo in ['telefone', 'email', 'endereco']:
+        for campo in ['email', 'endereco']: # 'telefone' removido da lista
             if campo in dados:
                 setattr(empresa, campo, dados[campo])
+        if 'telefone' in dados: # Explicitamente não faz nada com telefone se enviado
+            pass
         
         empresa.updated_at = datetime.utcnow()
         db.session.commit()

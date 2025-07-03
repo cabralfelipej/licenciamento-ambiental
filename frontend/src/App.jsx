@@ -157,8 +157,23 @@ function App() {
     data_validade: '',
     observacoes: ''
   });
-  const [empresasParaSelect, setEmpresasParaSelect] = useState([]); // Para o select de empresas no form de licença
+  const [empresasParaSelect, setEmpresasParaSelect] = useState([]);
   const [todasAsCondicionantes, setTodasAsCondicionantes] = useState([]);
+
+  // Função para buscar/atualizar empresas para o select, pode ser chamada externamente se necessário
+  const fetchEmpresasParaSelect = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/empresas`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setEmpresasParaSelect(data.map(emp => ({ id: emp.id, razao_social: emp.razao_social })));
+    } catch (error) {
+      console.error("Erro ao buscar empresas para select:", error);
+      setEmpresasParaSelect([]);
+    }
+  };
 
   const resetLicencaForm = () => {
     setEditingLicenca(null);
@@ -229,10 +244,16 @@ function App() {
     };
 
     fetchDashboardSummary();
-    fetchEmpresasParaSelect();
+    fetchEmpresasParaSelect(); // Chamada inicial
     fetchTodasCondicionantes();
 
-  }, [API_BASE_URL]); // Adicionado API_BASE_URL como dependência para re-fetch se mudar
+  }, [API_BASE_URL]);
+
+  // Callback para ser chamado por GestaoEmpresas após um novo cadastro/edição
+  const handleEmpresaAtualizada = () => {
+    fetchEmpresasParaSelect(); // Re-busca as empresas para o select
+    fetchDashboardSummary(); // Opcional: Re-busca o resumo do dashboard se o total de empresas mudou
+  };
 
   const handleOpenNovaLicencaDialog = () => {
     resetLicencaForm(); // Reseta o formulário e a licença em edição
@@ -283,7 +304,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="empresas" className="space-y-6">
-            <GestaoEmpresas API_BASE_URL={API_BASE_URL} />
+            <GestaoEmpresas API_BASE_URL={API_BASE_URL} onEmpresaAtualizada={handleEmpresaAtualizada} />
           </TabsContent>
 
           <TabsContent value="licencas" className="space-y-6">
