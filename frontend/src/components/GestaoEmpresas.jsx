@@ -10,13 +10,14 @@ import { Plus, Edit, Trash2, Building2 } from 'lucide-react'
 
 // Componente para formulário de empresa
 function FormularioEmpresa({ empresa, onSave, onCancel }) {
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     razao_social: empresa?.razao_social || '',
     cnpj: empresa?.cnpj || '',
-    telefone: empresa?.telefone || '',
+    // telefone: empresa?.telefone || '', // Removido
     email: empresa?.email || '',
     endereco: empresa?.endereco || ''
-  })
+  };
+  const [formData, setFormData] = useState(initialFormData);
   const [cnpjError, setCnpjError] = useState('')
 
   const formatCnpj = (value) => {
@@ -101,15 +102,7 @@ function FormularioEmpresa({ empresa, onSave, onCancel }) {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="telefone">Telefone</Label>
-          <Input
-            id="telefone"
-            value={formData.telefone}
-            onChange={(e) => handleChange('telefone', e.target.value)}
-            placeholder="(00) 00000-0000"
-          />
-        </div>
+        {/* Campo Telefone Removido */}
         <div className="space-y-2">
           <Label htmlFor="email">E-mail</Label>
           <Input
@@ -146,7 +139,22 @@ function FormularioEmpresa({ empresa, onSave, onCancel }) {
 }
 
 // Componente principal de gestão de empresas
-export function GestaoEmpresas() {
+// Helper function para formatar CNPJ (pode ser movida para um arquivo de utils se usada em mais lugares)
+const formatCnpjDisplay = (value) => {
+  if (!value) return '';
+  const cleanedValue = String(value).replace(/\D/g, '').substring(0, 14);
+  let formattedValue = '';
+  for (let i = 0; i < cleanedValue.length; i++) {
+    formattedValue += cleanedValue[i];
+    if (i === 1 && cleanedValue.length > 2) formattedValue += '.';
+    else if (i === 4 && cleanedValue.length > 5) formattedValue += '.';
+    else if (i === 7 && cleanedValue.length > 8) formattedValue += '/';
+    else if (i === 11 && cleanedValue.length > 12) formattedValue += '-';
+  }
+  return formattedValue;
+};
+
+export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onEmpresaAtualizada
   const [empresas, setEmpresas] = useState([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -199,6 +207,9 @@ export function GestaoEmpresas() {
       // const savedEmpresa = await response.json(); // Descomentar se precisar do objeto retornado
 
       fetchEmpresas(); // Re-busca as empresas para atualizar a lista
+      if (onEmpresaAtualizada) {
+        onEmpresaAtualizada(); // Chama o callback para App.jsx atualizar sua lista de empresas
+      }
       setDialogOpen(false);
       setEmpresaEditando(null);
     } catch (error) {
@@ -309,7 +320,7 @@ export function GestaoEmpresas() {
                 {empresas.map((empresa) => (
                   <TableRow key={empresa.id}>
                     <TableCell className="font-medium">{empresa.razao_social}</TableCell>
-                    <TableCell>{empresa.cnpj}</TableCell>
+                    <TableCell>{formatCnpjDisplay(empresa.cnpj)}</TableCell>
                     <TableCell>{empresa.telefone}</TableCell>
                     <TableCell>{empresa.email}</TableCell>
                     <TableCell className="text-right">
