@@ -35,6 +35,7 @@ export function GestaoCondicionantes() {
     responsavel: '',
     observacoes: '',
   });
+  const [isRenovacao, setIsRenovacao] = useState(false);
 
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -70,7 +71,8 @@ export function GestaoCondicionantes() {
         numero: l.numero_licenca,
         tipo: l.tipo_licenca,
         empresa_nome: l.empresa?.razao_social || 'Empresa Desconhecida',
-        data_emissao: l.data_emissao // Adicionar data_emissao aqui para uso no cálculo
+        data_emissao: l.data_emissao, // Para cálculo do prazo normal
+        data_vencimento: l.data_vencimento // Para cálculo da renovação
       })));
 
     } catch (error) {
@@ -87,30 +89,76 @@ export function GestaoCondicionantes() {
 
   // useEffect para calcular data_limite automaticamente
   useEffect(() => {
-    if (formData.licenca_id && formData.prazo_dias) {
-      const licencaSelecionada = licencas.find(l => l.id.toString() === formData.licenca_id);
-      if (licencaSelecionada && licencaSelecionada.data_emissao) {
+    // Só executa se uma licença estiver selecionada
+    if (!formData.licenca_id) {
+      // Se nenhuma licença estiver selecionada, e não for edição, talvez limpar data_limite
+      // No entanto, para edição, queremos manter a data_limite original até que algo mude.
+      // Se não for edição e não houver licença, limpa data_limite.
+      if (!editingCondicionante) {
+         setFormData(prev => ({ ...prev, data_limite: '' }));
+      }
+      return;
+    }
+
+    const licencaSelecionada = licencas.find(l => l.id.toString() === formData.licenca_id);
+
+    if (!licencaSelecionada) {
+      if (!editingCondicionante) { // Se não for edição e a licença sumir (improvável), limpa
+        setFormData(prev => ({ ...prev, data_limite: '' }));
+      }
+      return;
+    }
+
+    if (isRenovacao) {
+      if (licencaSelecionada.data_vencimento) {
         try {
-          const dataEmissao = new Date(licencaSelecionada.data_emissao + "T00:00:00"); // Adiciona T00:00:00 para evitar problemas de fuso
-          const prazoDiasNum = parseInt(formData.prazo_dias);
-          if (!isNaN(prazoDiasNum)) {
-            const novaDataLimite = new Date(dataEmissao.setDate(dataEmissao.getDate() + prazoDiasNum));
-            setFormData(prev => ({ ...prev, data_limite: format(novaDataLimite, 'yyyy-MM-dd') }));
-          }
+          const dataVencimento = new Date(licencaSelecionada.data_vencimento + "T00:00:00Z"); // Usar Z para UTC
+          // Subtrair 120 dias
+          dataVencimento.setDate(dataVencimento.getDate() - 120);
+          setFormData(prev => ({
+            ...prev,
+            data_limite: format(dataVencimento, 'yyyy-MM-dd'),
+            prazo_dias: '' // Limpa prazo_dias quando renovação é ativa
+          }));
         } catch (error) {
-          console.error("Erro ao calcular data limite:", error);
-          // Opcional: limpar data_limite ou mostrar erro
+          console.error("Erro ao calcular data limite para renovação:", error);
           setFormData(prev => ({ ...prev, data_limite: '' }));
         }
       } else {
-         // Licença não encontrada ou não tem data de emissão, limpar data_limite
+        // Licença não tem data de vencimento, limpar data_limite
         setFormData(prev => ({ ...prev, data_limite: '' }));
       }
+    } else if (formData.prazo_dias) { // Se não é renovação, mas tem prazo em dias
+      if (licencaSelecionada.data_emissao) {
+        try {
+          const dataEmissao = new Date(licencaSelecionada.data_emissao + "T00:00:00Z"); // Usar Z para UTC
+          const prazoDiasNum = parseInt(formData.prazo_dias);
+          if (!isNaN(prazoDiasNum)) {
+            // Adicionar prazoDiasNum à dataEmissao
+            dataEmissao.setDate(dataEmissao.getDate() + prazoDiasNum);
+            setFormData(prev => ({
+              ...prev,
+              data_limite: format(dataEmissao, 'yyyy-MM-dd')
+            }));
+          } else {
+             setFormData(prev => ({ ...prev, data_limite: '' })); // Prazo inválido
+          }
+        } catch (error) {
+          console.error("Erro ao calcular data limite com prazo:", error);
+          setFormData(prev => ({ ...prev, data_limite: '' }));
+        }
+      } else {
+        // Licença não tem data de emissão, limpar data_limite
+        setFormData(prev => ({ ...prev, data_limite: '' }));
+      }
+    } else if (!formData.data_limite) {
+        // Se não for renovação, nem tiver prazo, E data_limite também estiver vazia (ex: usuário limpou),
+        // garante que o campo data_limite no estado seja vazio.
+        // Isso cobre o caso de o usuário limpar o campo de data manualmente.
+        // No entanto, se data_limite tiver um valor (digitado manualmente), ele é mantido.
+        // A lógica de limpar prazo_dias quando data_limite é editada manualmente já está no onChange do Input.
     }
-    // Se prazo_dias for limpo e data_limite não foi preenchida manualmente, poderia limpar data_limite aqui também.
-    // No entanto, o comportamento atual é que se data_limite for preenchida manualmente, prazo_dias é limpo.
-    // E se prazo_dias for preenchido, data_limite é sobreescrita. Isso parece ok.
-  }, [formData.licenca_id, formData.prazo_dias, licencas]);
+  }, [formData.licenca_id, formData.prazo_dias, isRenovacao, licencas, editingCondicionante]);
 
 
   const handleSubmit = async (e) => {
@@ -303,19 +351,69 @@ export function GestaoCondicionantes() {
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
               <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> {/* items-start para alinhar com checkbox */}
               <div className="space-y-2">
-                <Label htmlFor="cond_prazo_dias">Prazo em Dias (a partir de hoje)</Label>
-                <Input id="cond_prazo_dias" type="number" value={formData.prazo_dias} onChange={e => setFormData(p => ({ ...p, prazo_dias: e.target.value, data_limite: '' }))} placeholder="Ex: 30" />
-                <p className="text-xs text-muted-foreground">Preencha OU a data limite.</p>
+                <Label htmlFor="cond_prazo_dias">Prazo em Dias</Label>
+                <Select
+                  value={isRenovacao ? '' : formData.prazo_dias}
+                  onValueChange={(value) => {
+                    if (!isRenovacao) {
+                      setFormData(prev => ({ ...prev, prazo_dias: value, data_limite: '' }));
+                    }
+                  }}
+                  disabled={isRenovacao}
+                >
+                  <SelectTrigger id="cond_prazo_dias">
+                    <SelectValue placeholder="Selecione um prazo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Limpar seleção</SelectItem>
+                    <SelectItem value="15">15 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                    <SelectItem value="60">60 dias</SelectItem>
+                    <SelectItem value="90">90 dias</SelectItem>
+                    <SelectItem value="120">120 dias</SelectItem>
+                    <SelectItem value="180">180 dias</SelectItem>
+                    <SelectItem value="360">360 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Preencha OU a data limite OU marque renovação.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cond_data_limite">Data Limite</Label>
-                <Input id="cond_data_limite" type="date" value={formData.data_limite} onChange={e => setFormData(p => ({ ...p, data_limite: e.target.value, prazo_dias: '' }))} />
-                 <p className="text-xs text-muted-foreground">Preencha OU o prazo em dias.</p>
+                <Input
+                  id="cond_data_limite"
+                  type="date"
+                  value={formData.data_limite}
+                  onChange={e => {
+                    if (!isRenovacao) { // Só permite mudar se não for renovação
+                      setFormData(p => ({ ...p, data_limite: e.target.value, prazo_dias: '' }))
+                    }
+                  }}
+                  disabled={isRenovacao} // Desabilita se renovação estiver ativa
+                />
+                 <p className="text-xs text-muted-foreground">Preenchido automaticamente ou manualmente.</p>
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="cond_renovacao"
+                checked={isRenovacao}
+                onCheckedChange={(checked) => {
+                  setIsRenovacao(checked);
+                  if (checked) {
+                    // Ao marcar renovação, limpa prazo_dias para forçar recálculo pela data de vencimento
+                    setFormData(prev => ({ ...prev, prazo_dias: '' }));
+                  }
+                  // Se desmarcar, o useEffect vai recalcular data_limite se prazo_dias estiver preenchido,
+                  // ou manterá a data_limite se prazo_dias estiver vazio.
+                }}
+              />
+              <Label htmlFor="cond_renovacao" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Calcular para Renovação (120 dias antes do vencimento da licença)
+              </Label>
+            </div>
+            <div className="space-y-2 pt-2"> {/* Adicionado pt-2 para espaçamento */}
               <Label htmlFor="cond_responsavel">Responsável</Label>
               <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
             </div>
