@@ -8,16 +8,20 @@ import { Label } from '@/components/ui/label.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from '@/components/ui/textarea.jsx'
-import { AlertTriangle, Plus, Edit, Trash2, Calendar as CalendarIcon, CheckCircle, Clock, User, Paperclip, Upload } from 'lucide-react'
+import { AlertTriangle, Plus, Edit, Trash2, Calendar as CalendarIcon, CheckCircle, Clock, User, Paperclip, Upload, Loader2 } from 'lucide-react' // Adicionado Loader2
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { toast } from "sonner" // Adicionado toast
+import { Skeleton } from "@/components/ui/skeleton" // Adicionado Skeleton
 
 export function GestaoCondicionantes() {
   const [condicionantes, setCondicionantes] = useState([])
   const [licencas, setLicencas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isSavingCondicionante, setIsSavingCondicionante] = useState(false); // Para formulário principal
+  const [isSavingCumprimento, setIsSavingCumprimento] = useState(false); // Para formulário de cumprimento
   const [dialogOpen, setDialogOpen] = useState(false) // Para form nova/editar condicionante
   const [editingCondicionante, setEditingCondicionante] = useState(null)
   const [cumprimentoDialogOpen, setCumprimentoDialogOpen] = useState(false)
@@ -164,6 +168,7 @@ export function GestaoCondicionantes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSavingCondicionante(true);
     try {
       let payload = { ...formData };
       if (payload.prazo_dias) payload.prazo_dias = parseInt(payload.prazo_dias);
@@ -189,9 +194,12 @@ export function GestaoCondicionantes() {
       fetchCondicionantesELicencas();
       setDialogOpen(false);
       resetForm();
+      toast.success(`Condicionante ${editingCondicionante ? 'atualizada' : 'cadastrada'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao salvar condicionante:', error);
-      alert(`Erro ao salvar condicionante: ${error.message}`);
+      toast.error(`Erro ao salvar condicionante: ${error.message}`);
+    } finally {
+      setIsSavingCondicionante(false);
     }
   };
 
@@ -244,7 +252,7 @@ export function GestaoCondicionantes() {
       alert("Data de cumprimento é obrigatória.");
       return;
     }
-
+    setIsSavingCumprimento(true);
     const payload = new FormData(); // Usar FormData para enviar arquivos
 
     // Formata a data_envio_cumprimento para YYYY-MM-DD, que será a data do cumprimento
@@ -273,9 +281,12 @@ export function GestaoCondicionantes() {
       fetchCondicionantesELicencas();
       setCumprimentoDialogOpen(false);
       resetCumprimentoForm();
+      toast.success("Cumprimento da condicionante salvo com sucesso!");
     } catch (error) {
       console.error('Erro ao salvar cumprimento:', error);
-      alert(`Erro ao salvar cumprimento: ${error.message}`);
+      toast.error(`Erro ao salvar cumprimento: ${error.message}`);
+    } finally {
+      setIsSavingCumprimento(false);
     }
   };
 
@@ -322,8 +333,43 @@ export function GestaoCondicionantes() {
         return getUrgencia(a) - getUrgencia(b);
   });
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-64">Carregando condicionantes...</div>;
+  const CondicionanteCardSkeleton = () => (
+    <div className="p-4 space-y-2 border rounded-lg">
+      <Skeleton className="h-5 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <div className="flex justify-end space-x-2 pt-2">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-8 w-8" />
+      </div>
+    </div>
+  );
+
+  if (loading && condicionantes.length === 0) {
+     // Tela de carregamento inicial para toda a seção de condicionantes
+     return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
+            <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
+          </div>
+        </div>
+        <Card className="shadow-lg">
+          <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+            <Skeleton className="h-6 w-1/2" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <CondicionanteCardSkeleton />
+              <CondicionanteCardSkeleton />
+              <CondicionanteCardSkeleton />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -423,14 +469,17 @@ export function GestaoCondicionantes() {
               <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
             </div>
             <div className="flex justify-end space-x-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancelar</Button>
-              <Button type="submit">{editingCondicionante ? 'Atualizar' : 'Cadastrar'}</Button>
+              <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }} disabled={isSavingCondicionante}>Cancelar</Button>
+              <Button type="submit" disabled={isSavingCondicionante}>
+                {isSavingCondicionante && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editingCondicionante ? 'Atualizar' : 'Cadastrar'}
+              </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={cumprimentoDialogOpen} onOpenChange={setCumprimentoDialogOpen}>
+      <Dialog open={cumprimentoDialogOpen} onOpenChange={(isOpen) => { if (!isSavingCumprimento) setCumprimentoDialogOpen(isOpen); }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Registrar Cumprimento da Condicionante</DialogTitle>
@@ -441,7 +490,7 @@ export function GestaoCondicionantes() {
               <Label htmlFor="cump_data_cumprimento">Data de Cumprimento *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={`w-full justify-start text-left font-normal ${!cumprimentoFormData.data_cumprimento && "text-muted-foreground"}`}>
+                  <Button variant={"outline"} className={`w-full justify-start text-left font-normal ${!cumprimentoFormData.data_cumprimento && "text-muted-foreground"}`} disabled={isSavingCumprimento}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {cumprimentoFormData.data_cumprimento ? format(new Date(cumprimentoFormData.data_cumprimento), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
                   </Button>
@@ -453,7 +502,7 @@ export function GestaoCondicionantes() {
               <Label htmlFor="cump_data_envio">Data de Envio do Comprovante</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={`w-full justify-start text-left font-normal ${!cumprimentoFormData.data_envio_comprovante && "text-muted-foreground"}`}>
+                  <Button variant={"outline"} className={`w-full justify-start text-left font-normal ${!cumprimentoFormData.data_envio_comprovante && "text-muted-foreground"}`} disabled={isSavingCumprimento}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {cumprimentoFormData.data_envio_comprovante ? format(new Date(cumprimentoFormData.data_envio_comprovante), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
                   </Button>
@@ -463,17 +512,20 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cump_anexo">Anexo Comprovante</Label>
-              <Input id="cump_anexo" type="file" onChange={(e) => setCumprimentoFormData(p => ({ ...p, anexo_comprovante: e.target.files[0] }))} />
+              <Input id="cump_anexo" type="file" onChange={(e) => setCumprimentoFormData(p => ({ ...p, anexo_comprovante: e.target.files[0] }))} disabled={isSavingCumprimento} />
               {typeof cumprimentoFormData.anexo_comprovante === 'string' && cumprimentoFormData.anexo_comprovante && (<p className="text-xs text-muted-foreground">Atual: {cumprimentoFormData.anexo_comprovante}</p>)}
             </div>
             <div className="space-y-2">
               <Label htmlFor="cump_obs">Observações sobre o Cumprimento</Label>
-              <Textarea id="cump_obs" value={cumprimentoFormData.observacoes_cumprimento} onChange={e => setCumprimentoFormData(p => ({ ...p, observacoes_cumprimento: e.target.value }))} placeholder="Detalhes..." rows={3} />
+              <Textarea id="cump_obs" value={cumprimentoFormData.observacoes_cumprimento} onChange={e => setCumprimentoFormData(p => ({ ...p, observacoes_cumprimento: e.target.value }))} placeholder="Detalhes..." rows={3} disabled={isSavingCumprimento} />
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => { setCumprimentoDialogOpen(false); resetCumprimentoForm(); }}>Cancelar</Button>
-            <Button onClick={handleSaveCumprimento}>Salvar Cumprimento</Button>
+            <Button type="button" variant="outline" onClick={() => { setCumprimentoDialogOpen(false); resetCumprimentoForm(); }} disabled={isSavingCumprimento}>Cancelar</Button>
+            <Button onClick={handleSaveCumprimento} disabled={isSavingCumprimento}>
+              {isSavingCumprimento && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar Cumprimento
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { FileText, Edit, Trash2, Calendar, AlertTriangle, CheckCircle, Search, Eye, ListFilter } from 'lucide-react'
 // Importações de GestaoCondicionantes para reuso (ou crie um componente CondicionanteCard separado)
-import { Calendar as CalendarIcon, Paperclip } from 'lucide-react' // CheckCircle já importado
+import { Calendar as CalendarIcon, Paperclip, Loader2 } from 'lucide-react' // CheckCircle já importado, Adicionado Loader2
 import { format } from "date-fns"
+import { toast } from "sonner" // Importar toast
+import { Skeleton } from "@/components/ui/skeleton" // Importar Skeleton
 import { ptBR } from "date-fns/locale"
 
 
@@ -78,6 +80,7 @@ export function GestaoLicencas({
 }) {
   const [licencas, setLicencas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false); // Novo estado para o botão de salvar
   const [termoBusca, setTermoBusca] = useState('');
   const [licencaSelecionadaId, setLicencaSelecionadaId] = useState(null);
   const [condicionantesDaLicenca, setCondicionantesDaLicenca] = useState([]);
@@ -119,6 +122,7 @@ export function GestaoLicencas({
   const handleSubmitLicenca = async (e) => {
     e.preventDefault();
     if (!API_BASE_URL) return;
+    setIsSaving(true);
 
     const payload = {
       empresa_id: formData.empresa_id ? parseInt(formData.empresa_id) : null,
@@ -153,9 +157,12 @@ export function GestaoLicencas({
       fetchLicencas(); // Re-busca para atualizar a lista
       setDialogOpen(false); // Fecha o dialog
       // setEditingLicenca(null); // Resetado pelo App.jsx ao fechar o dialog
+      toast.success(`Licença ${editingLicenca ? 'atualizada' : 'cadastrada'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao salvar licença:', error);
-      alert(`Erro ao salvar licença: ${error.message}`);
+      toast.error(`Erro ao salvar licença: ${error.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -234,8 +241,48 @@ export function GestaoLicencas({
       return a.dias_para_vencimento - b.dias_para_vencimento;
   });
 
+  const LicencaCardSkeleton = () => (
+    <div className="p-4 space-y-3">
+      <Skeleton className="h-5 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-4 w-1/2" />
+      <div className="flex justify-end space-x-2 pt-2">
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-8 w-8" />
+        <Skeleton className="h-8 w-8" />
+      </div>
+    </div>
+  );
+
   if (loading && licencas.length === 0 && API_BASE_URL) {
-    return <div className="flex justify-center items-center h-64">Carregando licenças...</div>;
+     // Tela de carregamento inicial para toda a seção de licenças
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-2">
+          <div>
+            <h3 className="text-xl font-semibold flex items-center">
+              <FileText className="h-5 w-5 mr-2 text-primary" />
+              Licenças Ambientais
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Busque, visualize e gerencie as licenças.
+            </p>
+          </div>
+          <Skeleton className="h-9 w-full sm:w-auto sm:max-w-xs" /> {/* Skeleton para input de busca */}
+        </div>
+        <Card className="shadow-md">
+          <CardHeader>
+            <Skeleton className="h-6 w-1/2" /> {/* Skeleton para título do card */}
+          </CardHeader>
+          <CardContent className="p-0">
+            <LicencaCardSkeleton />
+            <LicencaCardSkeleton />
+            <LicencaCardSkeleton />
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const empresasDisponiveis = empresas || [];
@@ -300,8 +347,11 @@ export function GestaoLicencas({
               <Textarea id="gl_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({...p, observacoes: e.target.value}))} placeholder="Detalhes..." rows={3} />
             </div>
             <div className="flex justify-end space-x-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-              <Button type="submit">{editingLicenca ? 'Atualizar Licença' : 'Cadastrar Licença'}</Button>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>Cancelar</Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {editingLicenca ? 'Atualizar Licença' : 'Cadastrar Licença'}
+              </Button>
             </div>
           </form>
         </DialogContent>
