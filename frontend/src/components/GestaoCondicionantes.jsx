@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.jsx'
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { AlertTriangle, Plus, Edit, Trash2, Calendar as CalendarIcon, CheckCircle, Clock, User, Paperclip, Upload } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
