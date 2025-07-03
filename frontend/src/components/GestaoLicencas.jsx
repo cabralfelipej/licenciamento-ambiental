@@ -121,17 +121,18 @@ export function GestaoLicencas({
     if (!API_BASE_URL) return;
 
     const payload = {
-      ...formData,
-      // Garante que empresa_id seja um número se não for nulo/undefined
       empresa_id: formData.empresa_id ? parseInt(formData.empresa_id) : null,
-      // Backend espera tipo_licenca, numero_licenca, data_emissao, data_vencimento
       tipo_licenca: formData.tipo,
       numero_licenca: formData.numero,
-      // data_emissao e data_validade já devem estar no formato YYYY-MM-DD
+      orgao_emissor: formData.orgao_emissor,
+      data_emissao: formData.data_emissao, // Deve estar no formato YYYY-MM-DD
+      data_vencimento: formData.data_validade, // Corrigido: envia data_validade como data_vencimento
+      observacoes: formData.observacoes,
+      // status é gerenciado pelo backend ou default
     };
-    // Remover campos que não são do modelo Licenca ou que são tratados pelo backend
-    delete payload.tipo;
-    delete payload.numero;
+    // Não precisa deletar tipo e numero se eles não existirem mais no formData após o mapeamento direto.
+    // Se formData ainda tiver 'tipo' e 'numero' com nomes antigos, a abordagem de delete era correta.
+    // A melhor prática é construir o payload explicitamente.
 
     try {
       const method = editingLicenca ? 'PUT' : 'POST';
