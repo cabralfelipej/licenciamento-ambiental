@@ -354,10 +354,10 @@ export function GestaoLicencas({
                             {getStatusBadge(licenca.status, licenca.dias_para_vencimento)}
                             </div>
                             <p className="text-xs text-muted-foreground"><strong>Empresa:</strong> {licenca.empresa_nome}</p>
-                            <p className="text-xs text-muted-foreground"><strong>Número:</strong> {licenca.numero} | <strong>Órgão:</strong> {licenca.orgao_emissor}</p>
+                            <p className="text-xs text-muted-foreground"><strong>Número:</strong> {licenca.numero_licenca || licenca.numero} | <strong>Órgão:</strong> {licenca.orgao_emissor}</p>
                             <p className="text-xs text-muted-foreground">
-                                <strong>Emissão:</strong> {new Date(licenca.data_emissao).toLocaleDateString('pt-BR')} |
-                                <strong> Validade:</strong> {new Date(licenca.data_validade).toLocaleDateString('pt-BR')}
+                                <strong>Emissão:</strong> {licenca.data_emissao ? new Date(licenca.data_emissao + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'} |
+                                <strong> Validade:</strong> {licenca.data_vencimento ? new Date(licenca.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
                             </p>
                             {licenca.dias_para_vencimento >= 0 && !(licenca.status === 'vencida') &&(
                                 <p className="text-xs text-muted-foreground"><strong>Vence em:</strong> {licenca.dias_para_vencimento} dias</p>

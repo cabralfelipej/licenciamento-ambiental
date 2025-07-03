@@ -311,7 +311,7 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
                 <TableRow>
                   <TableHead>Razão Social</TableHead>
                   <TableHead>CNPJ</TableHead>
-                  <TableHead>Telefone</TableHead>
+                  {/* <TableHead>Telefone</TableHead> Removido */}
                   <TableHead>E-mail</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -321,7 +321,7 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
                   <TableRow key={empresa.id}>
                     <TableCell className="font-medium">{empresa.razao_social}</TableCell>
                     <TableCell>{formatCnpjDisplay(empresa.cnpj)}</TableCell>
-                    <TableCell>{empresa.telefone}</TableCell>
+                    {/* <TableCell>{empresa.telefone}</TableCell> Removido */}
                     <TableCell>{empresa.email}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
