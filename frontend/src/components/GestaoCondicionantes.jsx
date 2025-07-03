@@ -368,7 +368,7 @@ export function GestaoCondicionantes() {
                     <SelectValue placeholder="Selecione um prazo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Limpar seleção</SelectItem>
+                    {/* <SelectItem value="">Limpar seleção</SelectItem> Removido pois causa erro */}
                     <SelectItem value="15">15 dias</SelectItem>
                     <SelectItem value="30">30 dias</SelectItem>
                     <SelectItem value="60">60 dias</SelectItem>
