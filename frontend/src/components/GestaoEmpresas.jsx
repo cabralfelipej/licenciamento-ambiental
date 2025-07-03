@@ -8,8 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.jsx'
 import { Plus, Edit, Trash2, Building2 } from 'lucide-react'
 
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+
 // Componente para formulário de empresa
-function FormularioEmpresa({ empresa, onSave, onCancel }) {
+function FormularioEmpresa({ empresa, onSave, onCancel, isSaving }) { // Adicionado isSaving
   const initialFormData = {
     razao_social: empresa?.razao_social || '',
     cnpj: empresa?.cnpj || '',
@@ -127,10 +131,11 @@ function FormularioEmpresa({ empresa, onSave, onCancel }) {
       </div>
       
       <div className="flex justify-end space-x-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
           Cancelar
         </Button>
-        <Button type="submit">
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {empresa ? 'Atualizar' : 'Cadastrar'}
         </Button>
       </div>
@@ -157,6 +162,7 @@ const formatCnpjDisplay = (value) => {
 export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onEmpresaAtualizada
   const [empresas, setEmpresas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false) // Estado para o spinner do botão Salvar
   const [dialogOpen, setDialogOpen] = useState(false)
   const [empresaEditando, setEmpresaEditando] = useState(null)
 
@@ -182,9 +188,10 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
 
   useEffect(() => {
     fetchEmpresas();
-  }, []);
+  }, []); // Roda uma vez ao montar
 
   const handleSaveEmpresa = async (formData) => {
+    setIsSaving(true);
     try {
       const method = empresaEditando ? 'PUT' : 'POST';
       const url = empresaEditando
@@ -212,9 +219,12 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
       }
       setDialogOpen(false);
       setEmpresaEditando(null);
+      toast.success(`Empresa ${empresaEditando ? 'atualizada' : 'cadastrada'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao salvar empresa:', error);
-      alert(`Erro ao salvar empresa: ${error.message}`); // Exibe erro para o usuário
+      toast.error(`Erro ao salvar empresa: ${error.message}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -249,8 +259,37 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
     setDialogOpen(true)
   }
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-64">Carregando empresas...</div>
+  // Skeleton para a tabela
+  const TableSkeleton = () => (
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full" />
+      <Skeleton className="h-8 w-full" />
+    </div>
+  );
+
+
+  if (loading && empresas.length === 0) { // Mostra skeleton apenas no carregamento inicial se não houver empresas
+    return (
+      <div className="space-y-6">
+         <div className="flex justify-between items-center">
+           <div>
+             <h2 className="text-2xl font-bold">Gestão de Empresas</h2>
+             <p className="text-muted-foreground">Cadastro e gerenciamento de empresas</p>
+           </div>
+            <Button disabled><Plus className="h-4 w-4 mr-2" /> Nova Empresa</Button>
+         </div>
+         <Card>
+           <CardHeader>
+             <Skeleton className="h-6 w-1/2" />
+           </CardHeader>
+           <CardContent>
+             <TableSkeleton />
+           </CardContent>
+         </Card>
+      </div>
+    )
   }
 
   return (
@@ -283,6 +322,7 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
               empresa={empresaEditando}
               onSave={handleSaveEmpresa}
               onCancel={() => setDialogOpen(false)}
+              isSaving={isSaving} // Passa o estado isSaving
             />
           </DialogContent>
         </Dialog>
@@ -296,7 +336,10 @@ export function GestaoEmpresas({ onEmpresaAtualizada }) { // Adicionada prop onE
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {empresas.length === 0 ? (
+          {loading && empresas.length > 0 && <div className="py-4"><TableSkeleton /></div> }
+          {/* Mostra skeleton se estiver carregando E já houver empresas (para recarregamento) */}
+
+          {!loading && empresas.length === 0 ? (
             <div className="text-center py-8">
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">Nenhuma empresa cadastrada</p>

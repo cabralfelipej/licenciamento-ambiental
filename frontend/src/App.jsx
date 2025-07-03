@@ -7,6 +7,7 @@ import { GestaoEmpresas } from './components/GestaoEmpresas.jsx'
 import { GestaoLicencas } from './components/GestaoLicencas.jsx'
 import { GestaoCondicionantes } from './components/GestaoCondicionantes.jsx'
 import { GoogleCalendarIntegration } from './components/GoogleCalendarIntegration.jsx'
+import { Toaster } from '@/components/ui/sonner.jsx' // Importar o Toaster
 import './App.css'
 
 // Definindo a URL base da API do backend
@@ -16,12 +17,16 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 // const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://seu-backend-no-render.onrender.com';
 
 
+import { Skeleton } from "@/components/ui/skeleton" // Importar Skeleton
+
 // Componente do Dashboard
-function Dashboard({ resumo } ) {
+function Dashboard({ resumo, loadingResumo } ) { // Adicionado loadingResumo
   const [urgentActions, setUrgentActions] = useState([]);
+  const [loadingUrgentActions, setLoadingUrgentActions] = useState(true); // Estado de carregamento para ações urgentes
 
   useEffect(() => {
     const fetchUrgentActions = async () => {
+      setLoadingUrgentActions(true);
       try {
         const response = await fetch(`${API_BASE_URL}/api/condicionantes/urgentes`);
         if (!response.ok) {
@@ -31,11 +36,14 @@ function Dashboard({ resumo } ) {
         setUrgentActions(data);
       } catch (error) {
         console.error("Erro ao buscar ações urgentes:", error);
+        setUrgentActions([]); // Define como vazio em caso de erro
+      } finally {
+        setLoadingUrgentActions(false);
       }
     };
 
     fetchUrgentActions();
-  }, []);
+  }, []); // API_BASE_URL é definido fora, não precisa ser dependência aqui se não mudar em runtime
 
   const getBadgeVariant = (diasRestantes) => {
     if (diasRestantes < 0) return "destructive";
@@ -52,8 +60,8 @@ function Dashboard({ resumo } ) {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{resumo.total_empresas}</div>
-            <p className="text-xs text-muted-foreground">+20.1% do mês passado</p>
+            {loadingResumo ? <Skeleton className="h-8 w-1/2 mb-1" /> : <div className="text-2xl font-bold">{resumo.total_empresas}</div>}
+            {loadingResumo ? <Skeleton className="h-4 w-3/4" /> : <p className="text-xs text-muted-foreground">+20.1% do mês passado</p>}
           </CardContent>
         </Card>
         <Card>
@@ -62,8 +70,8 @@ function Dashboard({ resumo } ) {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{resumo.total_licencas}</div>
-            <p className="text-xs text-muted-foreground">+180.1% do mês passado</p>
+            {loadingResumo ? <Skeleton className="h-8 w-1/2 mb-1" /> : <div className="text-2xl font-bold">{resumo.total_licencas}</div>}
+            {loadingResumo ? <Skeleton className="h-4 w-3/4" /> : <p className="text-xs text-muted-foreground">+180.1% do mês passado</p>}
           </CardContent>
         </Card>
         <Card>
@@ -72,8 +80,8 @@ function Dashboard({ resumo } ) {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{resumo.licencas_vencendo}</div>
-            <p className="text-xs text-muted-foreground">{resumo.licencas_vencidas} vencidas</p>
+            {loadingResumo ? <Skeleton className="h-8 w-1/2 mb-1" /> : <div className="text-2xl font-bold">{resumo.licencas_vencendo}</div>}
+            {loadingResumo ? <Skeleton className="h-4 w-3/4" /> : <p className="text-xs text-muted-foreground">{resumo.licencas_vencidas} vencidas</p>}
           </CardContent>
         </Card>
         <Card>
@@ -82,8 +90,8 @@ function Dashboard({ resumo } ) {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{resumo.condicionantes_urgentes}</div>
-            <p className="text-xs text-muted-foreground">{resumo.condicionantes_vencidas} vencidas</p>
+            {loadingResumo ? <Skeleton className="h-8 w-1/2 mb-1" /> : <div className="text-2xl font-bold">{resumo.condicionantes_urgentes}</div>}
+            {loadingResumo ? <Skeleton className="h-4 w-3/4" /> : <p className="text-xs text-muted-foreground">{resumo.condicionantes_vencidas} vencidas</p>}
           </CardContent>
         </Card>
       </div>
@@ -95,23 +103,33 @@ function Dashboard({ resumo } ) {
             <CardDescription>Condicionantes com prazos próximos ou vencidos.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {urgentActions.length > 0 ? (
-                urgentActions.map((action) => (
-                  <div key={action.id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{action.descricao}</p>
-                      <p className="text-xs text-muted-foreground">{action.empresa_nome} - Prazo: {new Date(action.data_prazo).toLocaleDateString()}</p>
-                    </div>
-                    <Badge variant={getBadgeVariant(action.dias_restantes)}>
-                      {action.dias_restantes < 0 ? `Vencida há ${Math.abs(action.dias_restantes)} dias` : `Vence em ${action.dias_restantes} dias`}
-                    </Badge>
+            {loadingUrgentActions ? (
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : urgentActions.length > 0 ? (
+              urgentActions.map((action) => (
+                <div key={action.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+                  <div>
+                    <p className="text-sm font-medium">{action.descricao}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {action.empresa_nome || action.empresa?.razao_social || 'N/A'} - Prazo: {action.data_limite ? new Date(action.data_limite + 'T00:00:00').toLocaleDateString() : 'N/A'}
+                    </p>
                   </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">Nenhuma ação urgente no momento.</p>
-              )}
-            </div>
+                  <Badge variant={getBadgeVariant(action.dias_para_vencimento)}>
+                    {action.dias_para_vencimento < 0
+                      ? `Vencida há ${Math.abs(action.dias_para_vencimento)} dias`
+                      : action.dias_para_vencimento !== null
+                        ? `Vence em ${action.dias_para_vencimento} dias`
+                        : 'Prazo Indefinido'}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">Nenhuma ação urgente no momento.</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -126,14 +144,8 @@ function Dashboard({ resumo } ) {
 
 // Componente principal da aplicação
 function App() {
-  const [resumo, setResumo] = useState({
-    total_empresas: 0,
-    total_licencas: 0,
-    licencas_vencendo: 0,
-    licencas_vencidas: 0,
-    condicionantes_urgentes: 0,
-    condicionantes_vencidas: 0,
-  });
+  const [resumo, setResumo] = useState(null); // Inicializa como null para facilitar o estado de carregamento
+  const [loadingResumo, setLoadingResumo] = useState(true);
   // const [activeTab, setActiveTab] = useState("dashboard");
   // Persistência da aba ativa
   const [activeTab, setActiveTab] = useState(() => {
@@ -188,71 +200,71 @@ function App() {
     });
   };
 
+  // Movendo as funções de fetch para fora do useEffect para que possam ser chamadas por outros handlers
+  const fetchDashboardSummary = async () => {
+    setLoadingResumo(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/dashboard/resumo`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setResumo({
+        total_empresas: data.totais?.empresas ?? 0,
+        total_licencas: data.totais?.licencas ?? 0,
+        licencas_vencendo: data.alertas?.licencas_vencimento ?? 0,
+        licencas_vencidas: data.alertas?.licencas_vencidas ?? 0,
+        condicionantes_urgentes: data.alertas?.condicionantes_vencimento ?? 0,
+        condicionantes_vencidas: data.alertas?.condicionantes_vencidas ?? 0,
+      });
+    } catch (error) {
+      console.error("Erro ao buscar resumo do dashboard:", error);
+      setResumo({ total_empresas: 0, total_licencas: 0, licencas_vencendo: 0, licencas_vencidas: 0, condicionantes_urgentes: 0, condicionantes_vencidas: 0 }); // Fallback
+    } finally {
+      setLoadingResumo(false);
+    }
+  };
+
+  // A função fetchEmpresasParaSelect já está definida fora (no escopo do componente App)
+  // Vamos garantir que ela também esteja fora do useEffect para ser reutilizável.
+  // (Ela já estava fora, mas confirmando a intenção)
+
+  const fetchTodasCondicionantes = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/condicionantes`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      const condicionantesProcessadas = data.map(c => ({
+        ...c,
+        cumprida: c.status === 'cumprida' || !!c.data_envio_cumprimento,
+        licenca_numero: c.licenca?.numero_licenca || c.licenca_numero || 'N/A',
+        empresa_nome: c.empresa?.razao_social || c.empresa_nome || 'N/A',
+      }));
+      setTodasAsCondicionantes(condicionantesProcessadas);
+    } catch (error) {
+      console.error("Erro ao buscar todas as condicionantes:", error);
+      setTodasAsCondicionantes([]);
+    }
+  };
+
   useEffect(() => {
-    const fetchDashboardSummary = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/dashboard/resumo`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setResumo(data);
-      } catch (error) {
-        console.error("Erro ao buscar resumo do dashboard:", error);
-      }
+    const loadInitialData = async () => {
+      // Promise.all para carregar dados em paralelo
+      await Promise.all([
+        fetchDashboardSummary(),
+        fetchEmpresasParaSelect(),
+        fetchTodasCondicionantes()
+      ]);
     };
-
-    const fetchEmpresasParaSelect = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/empresas`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        // Mapeia para o formato esperado pelo Select (id, razao_social)
-        setEmpresasParaSelect(data.map(emp => ({ id: emp.id, razao_social: emp.razao_social })));
-      } catch (error) {
-        console.error("Erro ao buscar empresas para select:", error);
-        setEmpresasParaSelect([]); // Define como array vazio em caso de erro
-      }
-    };
-
-    const fetchTodasCondicionantes = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/condicionantes`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        // O backend já deve retornar os dados processados com dias_restantes, etc.
-        // Se precisar de algum processamento adicional no frontend, fazer aqui.
-        // Por exemplo, garantir que 'cumprida' seja booleano baseado em 'status' ou 'data_envio_cumprimento'
-        const condicionantesProcessadas = data.map(c => ({
-          ...c,
-          cumprida: c.status === 'cumprida' || !!c.data_envio_cumprimento,
-          // Adicionar licenca_numero e empresa_nome se não vierem diretamente da API /api/condicionantes
-          // Isso pode exigir uma lógica mais complexa se a API /api/condicionantes não aninhar esses dados.
-          // Idealmente, a API /api/condicionantes já retorna 'licenca' e 'empresa' aninhados.
-          licenca_numero: c.licenca?.numero_licenca || c.licenca_numero || 'N/A',
-          empresa_nome: c.empresa?.razao_social || c.empresa_nome || 'N/A',
-        }));
-        setTodasAsCondicionantes(condicionantesProcessadas);
-      } catch (error) {
-        console.error("Erro ao buscar todas as condicionantes:", error);
-        setTodasAsCondicionantes([]); // Define como array vazio em caso de erro
-      }
-    };
-
-    fetchDashboardSummary();
-    fetchEmpresasParaSelect(); // Chamada inicial
-    fetchTodasCondicionantes();
-
-  }, [API_BASE_URL]);
+    loadInitialData();
+  }, [API_BASE_URL]); // Dependência API_BASE_URL é importante aqui
 
   // Callback para ser chamado por GestaoEmpresas após um novo cadastro/edição
   const handleEmpresaAtualizada = () => {
     fetchEmpresasParaSelect(); // Re-busca as empresas para o select
-    fetchDashboardSummary(); // Opcional: Re-busca o resumo do dashboard se o total de empresas mudou
+    fetchDashboardSummary();   // Re-busca o resumo do dashboard
   };
 
   const handleOpenNovaLicencaDialog = () => {
@@ -300,7 +312,7 @@ function App() {
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <Dashboard resumo={resumo} />
+            <Dashboard resumo={resumo} loadingResumo={loadingResumo} />
           </TabsContent>
 
           <TabsContent value="empresas" className="space-y-6">
@@ -326,6 +338,7 @@ function App() {
           </TabsContent>
         </Tabs>
       </main>
+      <Toaster richColors /> {/* Adicionar o componente Toaster aqui */}
     </div>
   );
 }
