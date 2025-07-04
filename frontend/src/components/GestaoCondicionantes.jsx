@@ -398,7 +398,7 @@ export function GestaoCondicionantes() {
                 <SelectContent>{licencas.map(l => <SelectItem key={l.id} value={l.id.toString()}>{l.numero} - {l.tipo} ({l.empresa_nome})</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 relative z-10"> {/* Aplicando z-index aqui */}
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
               <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
             </div>
@@ -464,11 +464,11 @@ export function GestaoCondicionantes() {
                 Calcular para Renovação (120 dias antes do vencimento da licença)
               </Label>
             </div>
-            <div className="space-y-2 pt-2"> {/* Adicionado pt-2 para espaçamento */}
+            <div className="space-y-2 pt-2 relative z-10"> {/* Aplicando z-index aqui */}
               <Label htmlFor="cond_responsavel">Responsável</Label>
               <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 relative z-10"> {/* Aplicando z-index aqui */}
               <Label htmlFor="cond_observacoes">Observações</Label>
               <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
             </div>
