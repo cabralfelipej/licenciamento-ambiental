@@ -301,7 +301,11 @@ export function GestaoLicencas({
               <div className="space-y-2">
                 <Label htmlFor="gl_empresa_id">Empresa *</Label>
                 <Select value={formData.empresa_id} onValueChange={(v) => setFormData(p => ({...p, empresa_id: v}))} required>
-                  <SelectTrigger id="gl_empresa_id"><SelectValue placeholder="Selecione a empresa" /></SelectTrigger>
+                  <SelectTrigger id="gl_empresa_id" className="w-full"> {/* Adicionado w-full para consistência, pode ajudar com layout */}
+                    <span className="truncate"> {/* Adicionado span com truncate */}
+                      <SelectValue placeholder="Selecione a empresa" />
+                    </span>
+                  </SelectTrigger>
                   <SelectContent>{empresasDisponiveis.map(e => <SelectItem key={e.id} value={e.id.toString()}>{e.razao_social}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
