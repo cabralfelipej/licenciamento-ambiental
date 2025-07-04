@@ -390,7 +390,11 @@ export function GestaoCondicionantes() {
             <div className="space-y-2">
               <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
-                <SelectTrigger id="cond_licenca_id"><SelectValue placeholder="Selecione a licença" /></SelectTrigger>
+                <SelectTrigger id="cond_licenca_id" className="w-full">
+                  <span className="truncate">
+                    <SelectValue placeholder="Selecione a licença" />
+                  </span>
+                </SelectTrigger>
                 <SelectContent>{licencas.map(l => <SelectItem key={l.id} value={l.id.toString()}>{l.numero} - {l.tipo} ({l.empresa_nome})</SelectItem>)}</SelectContent>
               </Select>
             </div>
