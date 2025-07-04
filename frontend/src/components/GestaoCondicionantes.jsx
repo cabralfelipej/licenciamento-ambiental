@@ -390,8 +390,8 @@ export function GestaoCondicionantes() {
             <div className="space-y-2 min-w-0"> {/* Adicionado min-w-0 */}
               <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
-                <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden"> {/* Adicionado overflow-hidden */}
-                  <span className="truncate block"> {/* Adicionado block */}
+                <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden">
+                  <span className="block truncate max-w-[calc(100%-2.5rem)]"> {/* Aplicando max-width aqui */}
                     <SelectValue placeholder="Selecione a licença" />
                   </span>
                 </SelectTrigger>
