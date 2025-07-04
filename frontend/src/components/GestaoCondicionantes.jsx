@@ -355,6 +355,11 @@ export function GestaoCondicionantes() {
             <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
             <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
           </div>
+           {/* Botão Nova Condicionante (DialogTrigger) movido para cá, desabilitado durante o loading inicial */}
+          <Button disabled>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Condicionante
+          </Button>
         </div>
         <Card className="shadow-lg">
           <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
@@ -374,14 +379,16 @@ export function GestaoCondicionantes() {
 
   return (
     <div className="space-y-6">
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogTrigger asChild>
-          <Button onClick={() => { resetForm(); setDialogOpen(true);}} className="flex items-center fixed top-4 right-40 z-50 shadow-lg">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Condicionante
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl">
+      {/* Dialog para Nova/Editar Condicionante */}
+      <Dialog open={dialogOpen} onOpenChange={(isOpen) => {
+        if (!isSavingCondicionante) setDialogOpen(isOpen);
+        if (!isOpen) { // Ao fechar o dialog
+          resetForm();
+          setIsRenovacao(false); // Resetar isRenovacao
+        }
+      }}>
+        {/* O DialogTrigger foi movido para o cabeçalho da seção abaixo */}
+        <DialogContent className="max-w-2xl overflow-y-auto"> {/* Adicionado overflow-y-auto para o caso de conteúdo muito grande */}
           <DialogHeader>
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
@@ -539,6 +546,16 @@ export function GestaoCondicionantes() {
           <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
           <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
         </div>
+        <DialogTrigger asChild>
+          <Button onClick={() => {
+            resetForm();
+            setIsRenovacao(false); // Garantir que renovação esteja desmarcada para novo formulário
+            setDialogOpen(true);
+          }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Condicionante
+          </Button>
+        </DialogTrigger>
       </div>
 
       <Card className="shadow-lg">
