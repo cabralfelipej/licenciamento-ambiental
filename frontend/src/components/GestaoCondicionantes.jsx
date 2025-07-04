@@ -387,7 +387,7 @@ export function GestaoCondicionantes() {
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0"> {/* Adicionado min-w-0 */}
               <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
                 <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden"> {/* Adicionado overflow-hidden */}
