@@ -385,8 +385,8 @@ export function GestaoCondicionantes() {
           setIsRenovacao(false);
         }
       }}>
-        {/* O Dialog envolve tanto o Trigger quanto o Content */}
-        <div className="flex justify-between items-center mb-6"> {/* Este div agora está DENTRO do Dialog */}
+        {/* O DialogTrigger foi movido para fora do DialogContent mas continua dentro do Dialog */}
+        <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
             <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
@@ -408,7 +408,7 @@ export function GestaoCondicionantes() {
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4 relative z-0">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4"> {/* Removido relative z-0 do form, pode não ser necessário aqui */}
             {/* Campos do formulário */}
             <div className="space-y-2 min-w-0">
               <Label htmlFor="cond_licenca_id">Licença *</Label>
@@ -421,7 +421,7 @@ export function GestaoCondicionantes() {
                 <SelectContent>{licencas.map(l => <SelectItem key={l.id} value={l.id.toString()}>{l.numero} - {l.tipo} ({l.empresa_nome})</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 relative z-10">
+            <div className="space-y-2"> {/* Removido relative z-10 daqui, testar sem */}
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
               <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
             </div>
@@ -483,11 +483,11 @@ export function GestaoCondicionantes() {
                 Calcular para Renovação (120 dias antes do vencimento da licença)
               </Label>
             </div>
-            <div className="space-y-2 pt-2 relative z-10">
+            <div className="space-y-2 pt-2">  {/* Removido relative z-10 daqui, testar sem */}
               <Label htmlFor="cond_responsavel">Responsável</Label>
               <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
             </div>
-            <div className="space-y-2 relative z-10">
+            <div className="space-y-2">  {/* Removido relative z-10 daqui, testar sem */}
               <Label htmlFor="cond_observacoes">Observações</Label>
               <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
             </div>
