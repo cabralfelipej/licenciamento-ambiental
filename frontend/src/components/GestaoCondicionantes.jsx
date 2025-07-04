@@ -347,22 +347,21 @@ export function GestaoCondicionantes() {
   );
 
   if (loading && condicionantes.length === 0) {
-     // Tela de carregamento inicial para toda a seção de condicionantes
-     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
-            <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
-          </div>
-           {/* Botão Nova Condicionante (DialogTrigger) movido para cá, desabilitado durante o loading inicial */}
-          <Button disabled>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Condicionante
-          </Button>
-        </div>
-        <Card className="shadow-lg">
-          <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+    // Tela de carregamento inicial para toda a seção de condicionantes
+    return (
+     <div className="space-y-6">
+       <div className="flex justify-between items-center mb-6">
+         <div>
+           <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
+           <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
+         </div>
+         <Button disabled> {/* Botão desabilitado durante o loading inicial */}
+           <Plus className="h-4 w-4 mr-2" />
+           Nova Condicionante
+         </Button>
+       </div>
+       <Card className="shadow-lg">
+         <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
             <Skeleton className="h-6 w-1/2" />
           </CardHeader>
           <CardContent className="p-0">
@@ -379,37 +378,54 @@ export function GestaoCondicionantes() {
 
   return (
     <div className="space-y-6">
-      {/* Dialog para Nova/Editar Condicionante */}
       <Dialog open={dialogOpen} onOpenChange={(isOpen) => {
         if (!isSavingCondicionante) setDialogOpen(isOpen);
-        if (!isOpen) { // Ao fechar o dialog
+        if (!isOpen) {
           resetForm();
-          setIsRenovacao(false); // Resetar isRenovacao
+          setIsRenovacao(false);
         }
       }}>
-        {/* O DialogTrigger foi movido para o cabeçalho da seção abaixo */}
-        <DialogContent className="max-w-2xl overflow-y-auto"> {/* Adicionado overflow-y-auto para o caso de conteúdo muito grande */}
+        {/* O Dialog envolve tanto o Trigger quanto o Content */}
+        <div className="flex justify-between items-center mb-6"> {/* Este div agora está DENTRO do Dialog */}
+          <div>
+            <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
+            <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
+          </div>
+          <DialogTrigger asChild>
+            <Button onClick={() => {
+              resetForm();
+              setIsRenovacao(false);
+              setDialogOpen(true);
+            }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Condicionante
+            </Button>
+          </DialogTrigger>
+        </div>
+
+        <DialogContent className="max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="space-y-2 min-w-0"> {/* Adicionado min-w-0 */}
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4 relative z-0">
+            {/* Campos do formulário */}
+            <div className="space-y-2 min-w-0">
               <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
                 <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden">
-                  <span className="block truncate max-w-[calc(100%-2.5rem)]"> {/* Aplicando max-width aqui */}
+                  <span className="block truncate max-w-[calc(100%-2.5rem)]">
                     <SelectValue placeholder="Selecione a licença" />
                   </span>
                 </SelectTrigger>
                 <SelectContent>{licencas.map(l => <SelectItem key={l.id} value={l.id.toString()}>{l.numero} - {l.tipo} ({l.empresa_nome})</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-2 relative z-10"> {/* Aplicando z-index aqui */}
+            <div className="space-y-2 relative z-10">
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
               <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"> {/* items-start para alinhar com checkbox */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
                 <Label htmlFor="cond_prazo_dias">Prazo em Dias</Label>
                 <Select
@@ -425,7 +441,6 @@ export function GestaoCondicionantes() {
                     <SelectValue placeholder="Selecione um prazo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* <SelectItem value="">Limpar seleção</SelectItem> Removido pois causa erro */}
                     <SelectItem value="15">15 dias</SelectItem>
                     <SelectItem value="30">30 dias</SelectItem>
                     <SelectItem value="60">60 dias</SelectItem>
@@ -444,11 +459,11 @@ export function GestaoCondicionantes() {
                   type="date"
                   value={formData.data_limite}
                   onChange={e => {
-                    if (!isRenovacao) { // Só permite mudar se não for renovação
+                    if (!isRenovacao) {
                       setFormData(p => ({ ...p, data_limite: e.target.value, prazo_dias: '' }))
                     }
                   }}
-                  disabled={isRenovacao} // Desabilita se renovação estiver ativa
+                  disabled={isRenovacao}
                 />
                  <p className="text-xs text-muted-foreground">Preenchido automaticamente ou manualmente.</p>
               </div>
@@ -460,27 +475,25 @@ export function GestaoCondicionantes() {
                 onCheckedChange={(checked) => {
                   setIsRenovacao(checked);
                   if (checked) {
-                    // Ao marcar renovação, limpa prazo_dias para forçar recálculo pela data de vencimento
                     setFormData(prev => ({ ...prev, prazo_dias: '' }));
                   }
-                  // Se desmarcar, o useEffect vai recalcular data_limite se prazo_dias estiver preenchido,
-                  // ou manterá a data_limite se prazo_dias estiver vazio.
                 }}
               />
               <Label htmlFor="cond_renovacao" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Calcular para Renovação (120 dias antes do vencimento da licença)
               </Label>
             </div>
-            <div className="space-y-2 pt-2 relative z-10"> {/* Aplicando z-index aqui */}
+            <div className="space-y-2 pt-2 relative z-10">
               <Label htmlFor="cond_responsavel">Responsável</Label>
               <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
             </div>
-            <div className="space-y-2 relative z-10"> {/* Aplicando z-index aqui */}
+            <div className="space-y-2 relative z-10">
               <Label htmlFor="cond_observacoes">Observações</Label>
               <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
             </div>
+            {/* Botões do formulário */}
             <div className="flex justify-end space-x-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }} disabled={isSavingCondicionante}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); setIsRenovacao(false); }} disabled={isSavingCondicionante}>Cancelar</Button>
               <Button type="submit" disabled={isSavingCondicionante}>
                 {isSavingCondicionante && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingCondicionante ? 'Atualizar' : 'Cadastrar'}
@@ -490,75 +503,9 @@ export function GestaoCondicionantes() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={cumprimentoDialogOpen} onOpenChange={(isOpen) => { if (!isSavingCumprimento) setCumprimentoDialogOpen(isOpen); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Registrar Cumprimento da Condicionante</DialogTitle>
-            <DialogDescription>{condicionanteParaCumprir?.descricao.substring(0,100)}{condicionanteParaCumprir && condicionanteParaCumprir.descricao.length > 100 ? "..." : ""}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="cump_data_cumprimento">Data de Cumprimento *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={`w-full justify-start text-left font-normal ${!cumprimentoFormData.data_cumprimento && "text-muted-foreground"}`} disabled={isSavingCumprimento}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {cumprimentoFormData.data_cumprimento ? format(new Date(cumprimentoFormData.data_cumprimento), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={cumprimentoFormData.data_cumprimento ? new Date(cumprimentoFormData.data_cumprimento) : null} onSelect={(d) => setCumprimentoFormData(p => ({ ...p, data_cumprimento: d }))} initialFocus locale={ptBR} /></PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cump_data_envio">Data de Envio do Comprovante</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant={"outline"} className={`w-full justify-start text-left font-normal ${!cumprimentoFormData.data_envio_comprovante && "text-muted-foreground"}`} disabled={isSavingCumprimento}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {cumprimentoFormData.data_envio_comprovante ? format(new Date(cumprimentoFormData.data_envio_comprovante), "PPP", { locale: ptBR }) : <span>Escolha uma data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={cumprimentoFormData.data_envio_comprovante ? new Date(cumprimentoFormData.data_envio_comprovante) : null} onSelect={(d) => setCumprimentoFormData(p => ({ ...p, data_envio_comprovante: d }))} locale={ptBR} /></PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cump_anexo">Anexo Comprovante</Label>
-              <Input id="cump_anexo" type="file" onChange={(e) => setCumprimentoFormData(p => ({ ...p, anexo_comprovante: e.target.files[0] }))} disabled={isSavingCumprimento} />
-              {typeof cumprimentoFormData.anexo_comprovante === 'string' && cumprimentoFormData.anexo_comprovante && (<p className="text-xs text-muted-foreground">Atual: {cumprimentoFormData.anexo_comprovante}</p>)}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cump_obs">Observações sobre o Cumprimento</Label>
-              <Textarea id="cump_obs" value={cumprimentoFormData.observacoes_cumprimento} onChange={e => setCumprimentoFormData(p => ({ ...p, observacoes_cumprimento: e.target.value }))} placeholder="Detalhes..." rows={3} disabled={isSavingCumprimento} />
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={() => { setCumprimentoDialogOpen(false); resetCumprimentoForm(); }} disabled={isSavingCumprimento}>Cancelar</Button>
-            <Button onClick={handleSaveCumprimento} disabled={isSavingCumprimento}>
-              {isSavingCumprimento && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Cumprimento
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
-          <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
-        </div>
-        <DialogTrigger asChild>
-          <Button onClick={() => {
-            resetForm();
-            setIsRenovacao(false); // Garantir que renovação esteja desmarcada para novo formulário
-            setDialogOpen(true);
-          }}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Condicionante
-          </Button>
-        </DialogTrigger>
-      </div>
-
-      <Card className="shadow-lg">
+      {/* Card e lista de condicionantes - FORA DO DIALOG DO FORMULÁRIO */}
+      {(!loading || condicionantes.length > 0) && (
+        <Card className="shadow-lg">
         <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
           <CardTitle className="text-lg flex items-center"><CalendarIcon className="h-5 w-5 mr-3 text-primary" />Condicionantes Cadastradas ({filteredCondicionantes.length})</CardTitle>
         </CardHeader>
