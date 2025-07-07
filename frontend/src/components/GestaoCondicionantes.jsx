@@ -404,6 +404,195 @@ export function GestaoCondicionantes() {
   }
 
   return (
-    <div>Conteúdo Simples Para Teste de Build</div>
+    <div className="space-y-6">
+      <Dialog open={dialogOpen} onOpenChange={(isOpen) => {
+        if (!isSavingCondicionante) setDialogOpen(isOpen);
+        if (!isOpen) {
+          resetForm();
+          setIsRenovacao(false);
+        }
+      }}>
+        {/* O DialogTrigger foi movido para fora do DialogContent mas continua dentro do Dialog */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
+            <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
+          </div>
+          <DialogTrigger asChild>
+            <Button onClick={() => {
+              resetForm();
+              setIsRenovacao(false);
+              setDialogOpen(true);
+            }}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nova Condicionante
+            </Button>
+          </DialogTrigger>
+        </div>
+
+        <DialogContent className="max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
+            <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-4"> {/* Removido relative z-0 do form, pode não ser necessário aqui */}
+            {/* Campos do formulário */}
+            <div className="space-y-2 min-w-0">
+              <Label htmlFor="cond_licenca_id">Licença *</Label>
+              <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
+                <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden">
+                  <span className="block truncate max-w-[calc(100%-2.5rem)]">
+                    <SelectValue placeholder="Selecione a licença" />
+                  </span>
+                </SelectTrigger>
+                <SelectContent>{licencas.map(l => <SelectItem key={l.id} value={l.id.toString()}>{l.numero} - {l.tipo} ({l.empresa_nome})</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2"> {/* Removido relative z-10 daqui, testar sem */}
+              <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
+              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <div className="space-y-2">
+                <Label htmlFor="cond_prazo_dias">Prazo em Dias</Label>
+                <Select
+                  value={isRenovacao ? '' : formData.prazo_dias}
+                  onValueChange={(value) => {
+                    if (!isRenovacao) {
+                      setFormData(prev => ({ ...prev, prazo_dias: value, data_limite: '' }));
+                    }
+                  }}
+                  disabled={isRenovacao}
+                >
+                  <SelectTrigger id="cond_prazo_dias">
+                    <SelectValue placeholder="Selecione um prazo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                    <SelectItem value="60">60 dias</SelectItem>
+                    <SelectItem value="90">90 dias</SelectItem>
+                    <SelectItem value="120">120 dias</SelectItem>
+                    <SelectItem value="180">180 dias</SelectItem>
+                    <SelectItem value="360">360 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Preencha OU a data limite OU marque renovação.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cond_data_limite">Data Limite</Label>
+                <Input
+                  id="cond_data_limite"
+                  type="date"
+                  value={formData.data_limite}
+                  onChange={e => {
+                    if (!isRenovacao) {
+                      setFormData(p => ({ ...p, data_limite: e.target.value, prazo_dias: '' }))
+                    }
+                  }}
+                  disabled={isRenovacao}
+                />
+                 <p className="text-xs text-muted-foreground">Preenchido automaticamente ou manualmente.</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="cond_renovacao"
+                checked={isRenovacao}
+                onCheckedChange={(checked) => {
+                  setIsRenovacao(checked);
+                  if (checked) {
+                    setFormData(prev => ({ ...prev, prazo_dias: '' }));
+                  }
+                }}
+              />
+              <Label htmlFor="cond_renovacao" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Calcular para Renovação (120 dias antes do vencimento da licença)
+              </Label>
+            </div>
+            <div className="space-y-2 pt-2">  {/* Removido relative z-10 daqui, testar sem */}
+              <Label htmlFor="cond_responsavel">Responsável</Label>
+              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
+            </div>
+            <div className="space-y-2">  {/* Removido relative z-10 daqui, testar sem */}
+              <Label htmlFor="cond_observacoes">Observações</Label>
+              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
+            </div>
+            {/* Botões do formulário */}
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setDialogOpen(false); resetForm(); setIsRenovacao(false); }} disabled={isSavingCondicionante}>Cancelar</Button>
+              <Button type="submit" disabled={isSavingCondicionante}>
+                {isSavingCondicionante && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editingCondicionante ? 'Atualizar' : 'Cadastrar'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Card e lista de condicionantes - FORA DO DIALOG DO FORMULÁRIO */}
+      {/* {(!loading || condicionantes.length > 0) && (
+        <Card className="shadow-lg">
+        <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+          <CardTitle className="text-lg flex items-center"><CalendarIcon className="h-5 w-5 mr-3 text-primary" />Condicionantes Cadastradas ({filteredCondicionantes.length})</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {filteredCondicionantes.length === 0 ? (
+            <div className="text-center py-12"><AlertTriangle className="h-16 w-16 mx-auto text-gray-400 mb-4" /><p className="text-xl font-semibold text-gray-600 dark:text-gray-300">Nenhuma condicionante encontrada.</p><p className="text-muted-foreground mt-1">Crie uma nova condicionante para começar.</p><Button onClick={() => { resetForm(); setDialogOpen(true);}} className="mt-6"><Plus className="h-4 w-4 mr-2" />Cadastrar Primeira Condicionante</Button></div>
+          ) : (
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredCondicionantes.map((c) => (
+                <div key={c.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150">
+                  <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                    <div className="flex-1 space-y-1.5">
+                      <div className="flex items-center space-x-3 mb-1">
+                        {getStatusIcon(c.status, c.dias_restantes, c.cumprida)}
+                        <h4 className="font-semibold text-base text-gray-800 dark:text-gray-100">Condicionante #{c.id}</h4>
+                        {getStatusBadge(c.status, c.dias_restantes, c.cumprida)}
+                      </div>
+                      <p className="text-sm text-muted-foreground"><strong>Licença:</strong> {c.licenca_numero} ({c.empresa_nome})</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{c.descricao}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
+                        <div><strong>Data Limite:</strong> {new Date(c.data_limite).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                        {!c.cumprida && c.dias_restantes >= 0 && (<div><strong>Dias Restantes:</strong> {c.dias_restantes}</div>)}
+                        {!c.cumprida && c.dias_restantes < 0 && (<div className="text-red-600 font-medium"><strong>Vencida há:</strong> {Math.abs(c.dias_restantes)} dias</div>)}
+                        {c.responsavel && (<div className="col-span-full sm:col-span-1"><User className="h-3 w-3 inline mr-1.5" /><strong>Responsável:</strong> {c.responsavel}</div>)}
+                      </div>
+                      {c.observacoes && (<p className="text-xs text-gray-500 dark:text-gray-400 pt-1 italic"><strong>Obs.:</strong> {c.observacoes}</p>)}
+                      {c.cumprida && (
+                        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/30 rounded-md border border-green-200 dark:border-green-700 text-xs space-y-1">
+                          <p className="font-semibold text-green-700 dark:text-green-300">Detalhes do Cumprimento:</p>
+                          <p><strong>Data:</strong> {new Date(c.data_cumprimento).toLocaleDateString('pt-BR')}</p>
+                          {c.data_envio_comprovante && (<p><strong>Envio:</strong> {new Date(c.data_envio_comprovante).toLocaleDateString('pt-BR')}</p>)}
+                          {c.anexo_comprovante && (<p className="flex items-center"><Paperclip className="h-3 w-3 mr-1.5 text-gray-500" /><strong>Anexo:</strong> {c.anexo_comprovante}</p>)}
+                          {c.observacoes_cumprimento && (<p><strong>Obs. Cumprimento:</strong> {c.observacoes_cumprimento}</p>)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col space-y-2 md:w-auto w-full pt-2 md:pt-0">
+                      {!c.cumprida && (
+                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-green-600 hover:text-green-700 border-green-300 hover:bg-green-50 dark:border-green-600 dark:hover:bg-green-700/20 w-full">
+                          <CheckCircle className="h-4 w-4 mr-2" />Registrar Cumprimento
+                        </Button>
+                      )}
+                      {c.cumprida && (
+                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-blue-600 hover:text-blue-700 border-blue-300 hover:bg-blue-50 dark:border-blue-600 dark:hover:bg-blue-700/20 w-full">
+                          <Edit className="h-3.5 w-3.5 mr-2" />Editar Cumprimento
+                        </Button>
+                      )}
+                      <div className="flex space-x-2 w-full">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(c)} className="flex-1" disabled={c.cumprida}><Edit className="h-3.5 w-3.5" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)} className="flex-1 text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 dark:border-red-600 dark:hover:bg-red-700/20"><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    )} */}
+    </div>
   );
 }
