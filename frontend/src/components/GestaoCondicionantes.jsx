@@ -373,8 +373,35 @@ export function GestaoCondicionantes() {
   //         </CardContent>
   //       </Card>
   //     </div>
-  //   );
-  // }
+  if (loading && condicionantes.length === 0) {
+    // Tela de carregamento inicial para toda a seção de condicionantes
+    return (
+     <div className="space-y-6">
+       <div className="flex justify-between items-center mb-6">
+         <div>
+           <h3 className="text-2xl font-bold flex items-center"><AlertTriangle className="h-6 w-6 mr-2 text-orange-500" />Gestão de Condicionantes</h3>
+           <p className="text-base text-muted-foreground">Acompanhe e gerencie todas as condicionantes ambientais.</p>
+         </div>
+         <Button disabled> {/* Botão desabilitado durante o loading inicial */}
+           <Plus className="h-4 w-4 mr-2" />
+           Nova Condicionante
+         </Button>
+       </div>
+       <Card className="shadow-lg">
+         <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
+            <Skeleton className="h-6 w-1/2" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <CondicionanteCardSkeleton />
+              <CondicionanteCardSkeleton />
+              <CondicionanteCardSkeleton />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div>Conteúdo Simples Para Teste de Build</div>
