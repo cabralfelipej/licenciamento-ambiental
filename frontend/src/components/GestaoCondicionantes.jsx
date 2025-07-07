@@ -301,11 +301,11 @@ export function GestaoCondicionantes() {
   };
 
   const getStatusBadge = (status, diasRestantes, cumprida) => {
-    if (cumprida) return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-700/30 dark:text-green-300">Cumprida</Badge>;
+    if (cumprida) return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-700 dark:bg-opacity-30 dark:text-green-300">Cumprida</Badge>;
     if (status === 'vencida' || (!cumprida && diasRestantes < 0) ) return <Badge variant="destructive">Vencida</Badge>;
-    if (diasRestantes <= 7) return <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-700/30 dark:text-red-300">Urgente</Badge>;
-    if (diasRestantes <= 30) return <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-700/30 dark:text-orange-300">Próximo</Badge>;
-    return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-700/30 dark:text-blue-300">Pendente</Badge>;
+    if (diasRestantes <= 7) return <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-700 dark:bg-opacity-30 dark:text-red-300">Urgente</Badge>;
+    if (diasRestantes <= 30) return <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-700 dark:bg-opacity-30 dark:text-orange-300">Próximo</Badge>;
+    return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-700 dark:bg-opacity-30 dark:text-blue-300">Pendente</Badge>;
   };
 
   const getStatusIcon = (status, diasRestantes, cumprida) => {
@@ -515,7 +515,7 @@ export function GestaoCondicionantes() {
           ) : (
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredCondicionantes.map((c) => (
-                <div key={c.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-150">
+                <div key={c.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 dark:hover:bg-opacity-50 transition-colors duration-150">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div className="flex-1 space-y-1.5">
                       <div className="flex items-center space-x-3 mb-1">
@@ -533,7 +533,7 @@ export function GestaoCondicionantes() {
                       </div>
                       {c.observacoes && (<p className="text-xs text-gray-500 dark:text-gray-400 pt-1 italic"><strong>Obs.:</strong> {c.observacoes}</p>)}
                       {c.cumprida && (
-                        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/30 rounded-md border border-green-200 dark:border-green-700 text-xs space-y-1">
+                        <div className="mt-3 p-3 bg-green-50 dark:bg-green-900 dark:bg-opacity-30 rounded-md border border-green-200 dark:border-green-700 text-xs space-y-1">
                           <p className="font-semibold text-green-700 dark:text-green-300">Detalhes do Cumprimento:</p>
                           <p><strong>Data:</strong> {new Date(c.data_cumprimento).toLocaleDateString('pt-BR')}</p>
                           {c.data_envio_comprovante && (<p><strong>Envio:</strong> {new Date(c.data_envio_comprovante).toLocaleDateString('pt-BR')}</p>)}
@@ -544,18 +544,18 @@ export function GestaoCondicionantes() {
                     </div>
                     <div className="flex flex-col space-y-2 md:w-auto w-full pt-2 md:pt-0">
                       {!c.cumprida && (
-                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-green-600 hover:text-green-700 border-green-300 hover:bg-green-50 dark:border-green-600 dark:hover:bg-green-700/20 w-full">
+                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-green-600 hover:text-green-700 border-green-300 hover:bg-green-50 dark:border-green-600 dark:hover:bg-green-700 dark:hover:bg-opacity-20 w-full">
                           <CheckCircle className="h-4 w-4 mr-2" />Registrar Cumprimento
                         </Button>
                       )}
                       {c.cumprida && (
-                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-blue-600 hover:text-blue-700 border-blue-300 hover:bg-blue-50 dark:border-blue-600 dark:hover:bg-blue-700/20 w-full">
+                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-blue-600 hover:text-blue-700 border-blue-300 hover:bg-blue-50 dark:border-blue-600 dark:hover:bg-blue-700 dark:hover:bg-opacity-20 w-full">
                           <Edit className="h-3.5 w-3.5 mr-2" />Editar Cumprimento
                         </Button>
                       )}
                       <div className="flex space-x-2 w-full">
                         <Button variant="outline" size="sm" onClick={() => handleEdit(c)} className="flex-1" disabled={c.cumprida}><Edit className="h-3.5 w-3.5" /></Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)} className="flex-1 text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 dark:border-red-600 dark:hover:bg-red-700/20"><Trash2 className="h-3.5 w-3.5" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)} className="flex-1 text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 dark:border-red-600 dark:hover:bg-red-700 dark:hover:bg-opacity-20"><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
                   </div>
