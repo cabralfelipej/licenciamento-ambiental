@@ -531,7 +531,7 @@ export function GestaoCondicionantes() {
       </Dialog>
 
       {/* Card e lista de condicionantes - FORA DO DIALOG DO FORMULÁRIO */}
-      {/* {(!loading || condicionantes.length > 0) && (
+      {(!loading || condicionantes.length > 0) && (
         <Card className="shadow-lg">
         <CardHeader className="bg-gray-50 dark:bg-gray-800 rounded-t-lg">
           <CardTitle className="text-lg flex items-center"><CalendarIcon className="h-5 w-5 mr-3 text-primary" />Condicionantes Cadastradas ({filteredCondicionantes.length})</CardTitle>
@@ -592,7 +592,7 @@ export function GestaoCondicionantes() {
           )}
         </CardContent>
       </Card>
-    )} */}
+    )}
     </div>
   );
 }
