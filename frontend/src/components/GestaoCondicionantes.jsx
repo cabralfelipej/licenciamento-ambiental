@@ -430,7 +430,7 @@ export function GestaoCondicionantes() {
           </DialogTrigger>
         </div>
 
-        <DialogContent className="max-w-2xl overflow-y-auto">
+        <DialogContent className="max-w-2xl overflow-y-auto"> {/* Mantendo max-w-2xl para consistência */}
           <DialogHeader>
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
@@ -471,7 +471,7 @@ export function GestaoCondicionantes() {
                   }}
                   disabled={isRenovacao}
                 >
-                  <SelectTrigger id="cond_prazo_dias">
+                  <SelectTrigger id="cond_prazo_dias" className="w-full">
                     <SelectValue placeholder="Selecione um prazo" />
                   </SelectTrigger>
                   <SelectContent>
