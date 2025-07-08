@@ -545,7 +545,7 @@ export function GestaoCondicionantes() {
           resetCumprimentoForm();
         }
       }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl"> {/* Alterado de max-w-lg para max-w-2xl */}
           <DialogHeader>
             <DialogTitle>Registrar Cumprimento da Condicionante #{condicionanteParaCumprir?.id}</DialogTitle>
             {condicionanteParaCumprir && <DialogDescription className="pt-1 text-sm text-muted-foreground truncate">{condicionanteParaCumprir.descricao}</DialogDescription>}
