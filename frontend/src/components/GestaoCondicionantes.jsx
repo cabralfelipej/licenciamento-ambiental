@@ -430,7 +430,7 @@ export function GestaoCondicionantes() {
           </DialogTrigger>
         </div>
 
-        <DialogContent className="max-w-2xl overflow-y-auto"> {/* Mantendo max-w-2xl para consistência */}
+        <DialogContent className="max-w-lg overflow-y-auto"> {/* Reduzido para max-w-lg para melhor layout */}
           <DialogHeader>
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
@@ -441,9 +441,8 @@ export function GestaoCondicionantes() {
               <div className="space-y-2 min-w-0">
                 <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
-                <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden truncate">
-                  {/* Simplificado para aplicar truncate diretamente no trigger.
-                      Pode ser necessário ajustar se o ícone do select for sobreposto. */}
+                <SelectTrigger id="cond_licenca_id" className="overflow-hidden truncate">
+                  {/* Removido w-full para melhor ajuste do layout */}
                   <SelectValue placeholder="Selecione a licença" />
                 </SelectTrigger>
                 <SelectContent>
@@ -457,9 +456,9 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
-              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required className="w-full" />
+              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
               <div className="space-y-2">
                 <Label htmlFor="cond_prazo_dias">Prazo em Dias</Label>
                 <Select
@@ -471,7 +470,7 @@ export function GestaoCondicionantes() {
                   }}
                   disabled={isRenovacao}
                 >
-                  <SelectTrigger id="cond_prazo_dias" className="w-full">
+                  <SelectTrigger id="cond_prazo_dias">
                     <SelectValue placeholder="Selecione um prazo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -519,11 +518,11 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2 pt-2">
               <Label htmlFor="cond_responsavel">Responsável</Label>
-              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" className="w-full" />
+              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cond_observacoes">Observações</Label>
-              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} className="w-full" />
+              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
             </div>
             {/* Botões do formulário */}
             <div className="flex justify-end space-x-2 pt-2">
@@ -545,7 +544,7 @@ export function GestaoCondicionantes() {
           resetCumprimentoForm();
         }
       }}>
-        <DialogContent className="max-w-2xl"> {/* Alterado de max-w-lg para max-w-2xl */}
+        <DialogContent className="max-w-lg"> {/* Reduzido para max-w-lg para melhor layout */}
           <DialogHeader>
             <DialogTitle>Registrar Cumprimento da Condicionante #{condicionanteParaCumprir?.id}</DialogTitle>
             {condicionanteParaCumprir && <DialogDescription className="pt-1 text-sm text-muted-foreground truncate">{condicionanteParaCumprir.descricao}</DialogDescription>}
@@ -558,7 +557,7 @@ export function GestaoCondicionantes() {
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
-                    className="w-full justify-start text-left font-normal"
+                    className="justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {cumprimentoFormData.data_cumprimento ? format(cumprimentoFormData.data_cumprimento, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
@@ -582,7 +581,6 @@ export function GestaoCondicionantes() {
                 id="anexo_comprovante"
                 type="file"
                 onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, anexo_comprovante: e.target.files ? e.target.files[0] : null }))}
-                className="w-full"
               />
               {/* Preview do nome do arquivo existente, se houver e for string (path) */}
               {condicionanteParaCumprir?.anexo_comprovante && typeof condicionanteParaCumprir.anexo_comprovante === 'string' && !cumprimentoFormData.anexo_comprovante && (
@@ -601,7 +599,6 @@ export function GestaoCondicionantes() {
                 onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, observacoes_cumprimento: e.target.value }))}
                 placeholder="Descreva as ações tomadas para o cumprimento..."
                 rows={3}
-                className="w-full"
               />
             </div>
 
