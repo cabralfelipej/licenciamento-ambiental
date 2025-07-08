@@ -290,18 +290,18 @@ export function GestaoLicencas({
   return (
     <div className="space-y-6">
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen} >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{editingLicenca ? 'Editar Licença' : 'Nova Licença'}</DialogTitle>
             <DialogDescription>Preencha os dados da licença ambiental.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitLicenca} className="space-y-4 pt-4">
             {/* Campos do formulário aqui (id dos inputs ajustados para evitar duplicidade se App tbm tiver forms) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="gl_empresa_id">Empresa *</Label>
                 <Select value={formData.empresa_id} onValueChange={(v) => setFormData(p => ({...p, empresa_id: v}))} required>
-                  <SelectTrigger id="gl_empresa_id" className="w-full"> {/* Adicionado w-full para consistência, pode ajudar com layout */}
+                  <SelectTrigger id="gl_empresa_id" className="overflow-hidden truncate">
                     <span className="truncate"> {/* Adicionado span com truncate */}
                       <SelectValue placeholder="Selecione a empresa" />
                     </span>
@@ -326,7 +326,7 @@ export function GestaoLicencas({
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="gl_numero">Número da Licença *</Label>
                 <Input id="gl_numero" value={formData.numero} onChange={e => setFormData(p => ({...p, numero: e.target.value}))} placeholder="Ex: LO-001/2024" required />
@@ -336,7 +336,7 @@ export function GestaoLicencas({
                 <Input id="gl_orgao" value={formData.orgao_emissor} onChange={e => setFormData(p => ({...p, orgao_emissor: e.target.value}))} placeholder="Ex: IMA/AL" required />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="gl_data_emissao">Data de Emissão *</Label>
                 <Input id="gl_data_emissao" type="date" value={formData.data_emissao} onChange={e => setFormData(p => ({...p, data_emissao: e.target.value}))} required />
