@@ -435,10 +435,11 @@ export function GestaoCondicionantes() {
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4"> {/* Removido relative z-0 do form, pode não ser necessário aqui */}
-            {/* Campos do formulário */}
-            <div className="space-y-2 min-w-0">
-              <Label htmlFor="cond_licenca_id">Licença *</Label>
+          <div className="w-full"> {/* Wrapper adicionado */}
+            <form onSubmit={handleSubmit} className="space-y-4 pt-4 w-full"> {/* w-full adicionado ao form */}
+              {/* Campos do formulário */}
+              <div className="space-y-2 min-w-0">
+                <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
                 <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden truncate">
                   {/* Simplificado para aplicar truncate diretamente no trigger.
@@ -533,6 +534,7 @@ export function GestaoCondicionantes() {
               </Button>
             </div>
           </form>
+        </div> {/* Fechamento do Wrapper adicionado */}
         </DialogContent>
       </Dialog>
 
@@ -548,9 +550,10 @@ export function GestaoCondicionantes() {
             <DialogTitle>Registrar Cumprimento da Condicionante #{condicionanteParaCumprir?.id}</DialogTitle>
             {condicionanteParaCumprir && <DialogDescription className="pt-1 text-sm text-muted-foreground truncate">{condicionanteParaCumprir.descricao}</DialogDescription>}
           </DialogHeader>
-          <form onSubmit={(e) => { e.preventDefault(); handleSaveCumprimento(); }} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="data_cumprimento">Data de Cumprimento *</Label>
+          <div className="w-full"> {/* Wrapper adicionado */}
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveCumprimento(); }} className="space-y-4 pt-4 w-full"> {/* w-full adicionado ao form */}
+              <div className="space-y-2">
+                <Label htmlFor="data_cumprimento">Data de Cumprimento *</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -612,6 +615,7 @@ export function GestaoCondicionantes() {
               </Button>
             </div>
           </form>
+        </div> {/* Fechamento do Wrapper adicionado */}
         </DialogContent>
       </Dialog>
 
