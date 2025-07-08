@@ -530,6 +530,83 @@ export function GestaoCondicionantes() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog para Registrar Cumprimento */}
+      <Dialog open={cumprimentoDialogOpen} onOpenChange={(isOpen) => {
+        if (!isSavingCumprimento) setCumprimentoDialogOpen(isOpen);
+        if (!isOpen) {
+          resetCumprimentoForm();
+        }
+      }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Registrar Cumprimento da Condicionante #{condicionanteParaCumprir?.id}</DialogTitle>
+            {condicionanteParaCumprir && <DialogDescription className="pt-1 text-sm text-muted-foreground truncate">{condicionanteParaCumprir.descricao}</DialogDescription>}
+          </DialogHeader>
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveCumprimento(); }} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="data_cumprimento">Data de Cumprimento *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {cumprimentoFormData.data_cumprimento ? format(cumprimentoFormData.data_cumprimento, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={cumprimentoFormData.data_cumprimento}
+                    onSelect={(date) => setCumprimentoFormData(prev => ({ ...prev, data_cumprimento: date }))}
+                    initialFocus
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="anexo_comprovante">Anexo Comprovante</Label>
+              <Input
+                id="anexo_comprovante"
+                type="file"
+                onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, anexo_comprovante: e.target.files ? e.target.files[0] : null }))}
+              />
+              {/* Preview do nome do arquivo existente, se houver e for string (path) */}
+              {condicionanteParaCumprir?.anexo_comprovante && typeof condicionanteParaCumprir.anexo_comprovante === 'string' && !cumprimentoFormData.anexo_comprovante && (
+                <p className="text-xs text-muted-foreground">
+                  Anexo atual: <a href={`${API_BASE_URL}/uploads/${condicionanteParaCumprir.anexo_comprovante}`} target="_blank" rel="noopener noreferrer" className="underline">{condicionanteParaCumprir.anexo_comprovante.split('/').pop()}</a>
+                  <br/>(Selecionar um novo arquivo irá substituí-lo)
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="observacoes_cumprimento">Observações do Cumprimento</Label>
+              <Textarea
+                id="observacoes_cumprimento"
+                value={cumprimentoFormData.observacoes_cumprimento}
+                onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, observacoes_cumprimento: e.target.value }))}
+                placeholder="Descreva as ações tomadas para o cumprimento..."
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setCumprimentoDialogOpen(false); resetCumprimentoForm(); }} disabled={isSavingCumprimento}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={!cumprimentoFormData.data_cumprimento || isSavingCumprimento}>
+                {isSavingCumprimento && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Cumprimento
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Card e lista de condicionantes - FORA DO DIALOG DO FORMULÁRIO */}
       {(!loading || condicionantes.length > 0) && (
         <Card className="shadow-lg">
