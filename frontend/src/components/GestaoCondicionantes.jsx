@@ -445,12 +445,18 @@ export function GestaoCondicionantes() {
                     <SelectValue placeholder="Selecione a licença" />
                   </span>
                 </SelectTrigger>
-                <SelectContent>{licencas.map(l => <SelectItem key={l.id} value={l.id.toString()}>{l.numero} - {l.tipo} ({l.empresa_nome})</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  {licencas.map(l => (
+                    <SelectItem key={l.id} value={l.id.toString()}>
+                      <span className="block truncate">{l.numero} - {l.tipo} ({l.empresa_nome})</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"> {/* Removido relative z-10 daqui, testar sem */}
+            <div className="space-y-2">
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
-              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required />
+              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required className="w-full" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
@@ -510,13 +516,13 @@ export function GestaoCondicionantes() {
                 Calcular para Renovação (120 dias antes do vencimento da licença)
               </Label>
             </div>
-            <div className="space-y-2 pt-2">  {/* Removido relative z-10 daqui, testar sem */}
+            <div className="space-y-2 pt-2">
               <Label htmlFor="cond_responsavel">Responsável</Label>
-              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" />
+              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" className="w-full" />
             </div>
-            <div className="space-y-2">  {/* Removido relative z-10 daqui, testar sem */}
+            <div className="space-y-2">
               <Label htmlFor="cond_observacoes">Observações</Label>
-              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} />
+              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} className="w-full" />
             </div>
             {/* Botões do formulário */}
             <div className="flex justify-end space-x-2 pt-2">
@@ -573,6 +579,7 @@ export function GestaoCondicionantes() {
                 id="anexo_comprovante"
                 type="file"
                 onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, anexo_comprovante: e.target.files ? e.target.files[0] : null }))}
+                className="w-full"
               />
               {/* Preview do nome do arquivo existente, se houver e for string (path) */}
               {condicionanteParaCumprir?.anexo_comprovante && typeof condicionanteParaCumprir.anexo_comprovante === 'string' && !cumprimentoFormData.anexo_comprovante && (
@@ -591,6 +598,7 @@ export function GestaoCondicionantes() {
                 onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, observacoes_cumprimento: e.target.value }))}
                 placeholder="Descreva as ações tomadas para o cumprimento..."
                 rows={3}
+                className="w-full"
               />
             </div>
 
