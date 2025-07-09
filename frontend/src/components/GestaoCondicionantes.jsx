@@ -474,7 +474,7 @@ export function GestaoCondicionantes() {
           </DialogTrigger>
         </div>
 
-        <DialogContent className="max-w-2xl overflow-y-auto"> {/* Mantendo max-w-2xl para consistência */}
+        <DialogContent className="max-w-lg overflow-y-auto"> {/* Reduzido para max-w-lg para melhor layout */}
           <DialogHeader>
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
@@ -482,18 +482,16 @@ export function GestaoCondicionantes() {
           <div className="w-full"> {/* Wrapper adicionado */}
             <form onSubmit={handleSubmit} className="space-y-4 pt-4 w-full"> {/* w-full adicionado ao form */}
               {/* Campos do formulário */}
-              <div className="space-y-2 min-w-0">
+              <div className="space-y-2">
                 <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
-                <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden truncate">
-                  {/* Simplificado para aplicar truncate diretamente no trigger.
-                      Pode ser necessário ajustar se o ícone do select for sobreposto. */}
-                  <SelectValue placeholder="Selecione a licença" />
+                <SelectTrigger id="cond_licenca_id" className="max-w-md overflow-hidden">
+                  <SelectValue placeholder="Selecione a licença" className="truncate" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-w-md">
                   {licencas.map(l => (
                     <SelectItem key={l.id} value={l.id.toString()}>
-                      <span className="block truncate">{l.numero} - {l.tipo} ({l.empresa_nome})</span>
+                      <span className="block truncate max-w-xs">{l.numero} - {l.tipo} ({l.empresa_nome})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -501,9 +499,9 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
-              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required className="w-full" />
+              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required className="max-w-md" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start max-w-md">
               <div className="space-y-2">
                 <Label htmlFor="cond_prazo_dias">Prazo em Dias</Label>
                 <Select
@@ -515,7 +513,7 @@ export function GestaoCondicionantes() {
                   }}
                   disabled={isRenovacao}
                 >
-                  <SelectTrigger id="cond_prazo_dias" className="w-full">
+                  <SelectTrigger id="cond_prazo_dias" className="max-w-32">
                     <SelectValue placeholder="Selecione um prazo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -542,6 +540,7 @@ export function GestaoCondicionantes() {
                     }
                   }}
                   disabled={isRenovacao}
+                  className="max-w-36"
                 />
                  <p className="text-xs text-muted-foreground">Preenchido automaticamente ou manualmente.</p>
               </div>
@@ -563,11 +562,11 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2 pt-2">
               <Label htmlFor="cond_responsavel">Responsável</Label>
-              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" className="w-full" />
+              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" className="max-w-md" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cond_observacoes">Observações</Label>
-              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} className="w-full" />
+              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} className="max-w-md" />
             </div>
             {/* Botões do formulário */}
             <div className="flex justify-end space-x-2 pt-2">
@@ -581,8 +580,6 @@ export function GestaoCondicionantes() {
         </div> {/* Fechamento do Wrapper adicionado */}
         </DialogContent>
       </Dialog>
-
-      {/* Dialog para Registrar Cumprimento FOI REMOVIDO */}
 
       {/* Card e lista de condicionantes - FORA DO DIALOG DO FORMULÁRIO */}
       {(!loading || condicionantes.length > 0) && (
