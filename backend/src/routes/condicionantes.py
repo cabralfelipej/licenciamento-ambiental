@@ -176,67 +176,36 @@ def condicionantes_por_vencer():
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
 
-@condicionantes_bp.route('/condicionantes/<int:condicionante_id>/marcar-cumprida', methods=['POST'])
-def marcar_condicionante_cumprida(condicionante_id):
-    """Marca uma condicionante como cumprida"""
+@condicionantes_bp.route('/condicionantes/<int:condicionante_id>/marcar-cumprida-rapido', methods=['POST'])
+def marcar_condicionante_cumprida_rapido(condicionante_id):
+    """Marca uma condicionante como cumprida (versão rápida sem formulário)"""
+    try:
+        condicionante = Condicionante.query.get_or_404(condicionante_id)
+        
+        condicionante.status = 'cumprida'
+        condicionante.data_envio_cumprimento = date.today()
+        condicionante.observacoes = None # Limpa observações de cumprimento anterior
+        condicionante.comprovante_path = None # Limpa comprovante anterior
+
+        condicionante.updated_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify(condicionante.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Erro ao marcar condicionante como cumprida (rápido): {str(e)}")
+        return jsonify({'erro': str(e)}), 500
+
+@condicionantes_bp.route('/condicionantes/<int:condicionante_id>/marcar-pendente', methods=['POST'])
+def marcar_condicionante_pendente(condicionante_id):
+    """Marca uma condicionante como pendente, limpando os dados de cumprimento."""
     try:
         condicionante = Condicionante.query.get_or_404(condicionante_id)
 
-        # Dados do formulário multipart
-        observacoes = request.form.get('observacoes')
-        data_envio_cumprimento_str = request.form.get('data_envio_cumprimento')
-        
-        condicionante.status = 'cumprida'
-        if observacoes:
-            condicionante.observacoes = observacoes
-
-        if data_envio_cumprimento_str:
-            try:
-                condicionante.data_envio_cumprimento = datetime.strptime(data_envio_cumprimento_str, '%Y-%m-%d').date()
-            except ValueError:
-                return jsonify({'erro': 'Formato de data de envio/cumprimento inválido. Use YYYY-MM-DD'}), 400
-        else:
-            # Se não for fornecida, usa a data atual
-            condicionante.data_envio_cumprimento = date.today()
-
-        # Tratamento do upload do arquivo
-        if 'comprovante' in request.files:
-            file = request.files['comprovante']
-            if file.filename == '':
-                pass # Nenhum arquivo selecionado
-            elif file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                # Garante que o diretório de upload existe (base + 'comprovantes')
-                comprovantes_base_dir = current_app.config.get('UPLOAD_FOLDER')
-                if not comprovantes_base_dir: # Fallback se não configurado, mas deveria estar
-                    comprovantes_base_dir = os.path.join(current_app.root_path, 'uploads')
-
-                comprovantes_upload_dir = os.path.join(comprovantes_base_dir, 'comprovantes')
-                os.makedirs(comprovantes_upload_dir, exist_ok=True)
-
-                timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                filename_com_timestamp = f"{timestamp}_{filename}"
-
-                file_path = os.path.join(comprovantes_upload_dir, filename_com_timestamp)
-                file.save(file_path)
-                # Salva o caminho relativo à subpasta 'comprovantes'
-                condicionante.comprovante_path = os.path.join('comprovantes', filename_com_timestamp)
-            else: # Arquivo inválido
-                db.session.rollback() # Desfaz quaisquer alterações na sessão (ex: observacoes)
-                return jsonify({'erro': 'Tipo de arquivo não permitido'}), 400
-        
-        # Se chegou aqui, o arquivo é válido ou não foi enviado.
-        # Agora podemos marcar como cumprida e definir a data.
-        condicionante.status = 'cumprida'
-        if not condicionante.data_envio_cumprimento: # Se não foi definida por formulário
-             if data_envio_cumprimento_str: # Se string foi passada mas não convertida antes (caso de não haver arquivo)
-                try:
-                    condicionante.data_envio_cumprimento = datetime.strptime(data_envio_cumprimento_str, '%Y-%m-%d').date()
-                except (ValueError, TypeError):
-                    condicionante.data_envio_cumprimento = date.today() # fallback
-             else:
-                condicionante.data_envio_cumprimento = date.today()
-
+        condicionante.status = 'pendente'
+        condicionante.data_envio_cumprimento = None
+        condicionante.observacoes = None # Limpa observações de cumprimento anterior
+        condicionante.comprovante_path = None # Limpa comprovante anterior
 
         condicionante.updated_at = datetime.utcnow()
         db.session.commit()
@@ -244,7 +213,7 @@ def marcar_condicionante_cumprida(condicionante_id):
         return jsonify(condicionante.to_dict()), 200
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Erro ao marcar condicionante como cumprida: {str(e)}")
+        current_app.logger.error(f"Erro ao marcar condicionante como pendente: {str(e)}")
         return jsonify({'erro': str(e)}), 500
 
 @condicionantes_bp.route('/dashboard/resumo', methods=['GET'])

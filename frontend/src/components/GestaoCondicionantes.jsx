@@ -20,18 +20,18 @@ export function GestaoCondicionantes() {
   const [condicionantes, setCondicionantes] = useState([])
   const [licencas, setLicencas] = useState([])
   const [loading, setLoading] = useState(true)
-  const [isSavingCondicionante, setIsSavingCondicionante] = useState(false); // Para formulário principal
-  const [isSavingCumprimento, setIsSavingCumprimento] = useState(false); // Para formulário de cumprimento
+  const [isSavingCondicionante, setIsSavingCondicionante] = useState(false); // Para formulário principal e agora também para ações rápidas de cumprimento
+  // const [isSavingCumprimento, setIsSavingCumprimento] = useState(false); // Removido - Usar isSavingCondicionante
   const [dialogOpen, setDialogOpen] = useState(false) // Para form nova/editar condicionante
   const [editingCondicionante, setEditingCondicionante] = useState(null)
-  const [cumprimentoDialogOpen, setCumprimentoDialogOpen] = useState(false)
-  const [condicionanteParaCumprir, setCondicionanteParaCumprir] = useState(null)
-  const [cumprimentoFormData, setCumprimentoFormData] = useState({
-    data_cumprimento: null, // Será new Date() no handleOpen
-    data_envio_comprovante: null,
-    anexo_comprovante: null, // Será File object ou null
-    observacoes_cumprimento: ''
-  });
+  // const [cumprimentoDialogOpen, setCumprimentoDialogOpen] = useState(false) // Removido - não haverá mais diálogo de cumprimento
+  // const [condicionanteParaCumprir, setCondicionanteParaCumprir] = useState(null) // Removido
+  // const [cumprimentoFormData, setCumprimentoFormData] = useState({ // Removido
+  // data_cumprimento: null,
+  // data_envio_comprovante: null,
+  // anexo_comprovante: null,
+  // observacoes_cumprimento: ''
+  // });
   const [formData, setFormData] = useState({
     licenca_id: '',
     descricao: '',
@@ -232,75 +232,119 @@ export function GestaoCondicionantes() {
     }
   };
 
-  const handleOpenCumprimentoDialog = (condicionante) => {
-    setCondicionanteParaCumprir(condicionante);
-    setCumprimentoFormData({
-      data_cumprimento: condicionante.data_envio_cumprimento // Backend usa data_envio_cumprimento como data de cumprimento efetivo
-        ? new Date(condicionante.data_envio_cumprimento + "T00:00:00") // Adiciona T00:00:00 para evitar problemas de fuso ao converter para Date
-        : new Date(),
-      data_envio_comprovante: condicionante.data_envio_comprovante // Se já tiver, usa. Backend pode usar este campo.
-        ? new Date(condicionante.data_envio_comprovante + "T00:00:00")
-        : null,
-      anexo_comprovante: null, // Sempre reseta o anexo para um novo upload ou nenhum
-      observacoes_cumprimento: condicionante.observacoes_cumprimento || ''
-    });
-    setCumprimentoDialogOpen(true);
-  };
+  // const handleOpenCumprimentoDialog = (condicionante) => { // Removido
+  //   setCondicionanteParaCumprir(condicionante);
+  //   setCumprimentoFormData({
+  //     data_cumprimento: condicionante.data_envio_cumprimento
+  //       ? new Date(condicionante.data_envio_cumprimento + "T00:00:00")
+  //       : new Date(),
+  //     data_envio_comprovante: condicionante.data_envio_comprovante
+  //       ? new Date(condicionante.data_envio_comprovante + "T00:00:00")
+  //       : null,
+  //     anexo_comprovante: null,
+  //     observacoes_cumprimento: condicionante.observacoes_cumprimento || ''
+  //   });
+  //   setCumprimentoDialogOpen(true);
+  // };
 
-  const handleSaveCumprimento = async () => {
-    if (!condicionanteParaCumprir || !cumprimentoFormData.data_cumprimento) {
-      alert("Data de cumprimento é obrigatória.");
-      return;
-    }
-    setIsSavingCumprimento(true);
-    const payload = new FormData(); // Usar FormData para enviar arquivos
+  // const handleSaveCumprimento = async () => { // Removido
+  //   if (!condicionanteParaCumprir || !cumprimentoFormData.data_cumprimento) {
+  //     alert("Data de cumprimento é obrigatória.");
+  //     return;
+  //   }
+  //   setIsSavingCumprimento(true);
+  //   const payload = new FormData();
 
-    // Formata a data_envio_cumprimento para YYYY-MM-DD, que será a data do cumprimento
-    payload.append('data_envio_cumprimento', format(cumprimentoFormData.data_cumprimento, "yyyy-MM-dd"));
+  //   payload.append('data_envio_cumprimento', format(cumprimentoFormData.data_cumprimento, "yyyy-MM-dd"));
 
-    if (cumprimentoFormData.observacoes_cumprimento) {
-      payload.append('observacoes', cumprimentoFormData.observacoes_cumprimento);
-    }
-    if (cumprimentoFormData.anexo_comprovante instanceof File) {
-      payload.append('comprovante', cumprimentoFormData.anexo_comprovante);
-    }
+  //   if (cumprimentoFormData.observacoes_cumprimento) {
+  //     payload.append('observacoes', cumprimentoFormData.observacoes_cumprimento);
+  //   }
+  //   if (cumprimentoFormData.anexo_comprovante instanceof File) {
+  //     payload.append('comprovante', cumprimentoFormData.anexo_comprovante);
+  //   }
 
-    // Não precisamos enviar data_cumprimento separadamente se o backend usa data_envio_cumprimento
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/api/condicionantes/${condicionanteParaCumprir.id}/marcar-cumprida`, {
+  //       method: 'POST',
+  //       body: payload,
+  //     });
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/condicionantes/${condicionanteParaCumprir.id}/marcar-cumprida`, {
-        method: 'POST',
-        body: payload, // Não definir Content-Type, o navegador fará isso automaticamente para FormData
-      });
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+  //     }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
-      }
-
-      fetchCondicionantesELicencas();
-      setCumprimentoDialogOpen(false);
-      resetCumprimentoForm();
-      toast.success("Cumprimento da condicionante salvo com sucesso!");
-    } catch (error) {
-      console.error('Erro ao salvar cumprimento:', error);
-      toast.error(`Erro ao salvar cumprimento: ${error.message}`);
-    } finally {
-      setIsSavingCumprimento(false);
-    }
-  };
+  //     fetchCondicionantesELicencas();
+  //     setCumprimentoDialogOpen(false);
+  //     resetCumprimentoForm();
+  //     toast.success("Cumprimento da condicionante salvo com sucesso!");
+  //   } catch (error) {
+  //     console.error('Erro ao salvar cumprimento:', error);
+  //     toast.error(`Erro ao salvar cumprimento: ${error.message}`);
+  //   } finally {
+  //     setIsSavingCumprimento(false);
+  //   }
+  // };
 
   const resetForm = () => {
     setFormData({ licenca_id: '', descricao: '', prazo_dias: '', data_limite: '', responsavel: '', observacoes: '' });
     setEditingCondicionante(null);
   };
 
-  const resetCumprimentoForm = () => {
-    setCondicionanteParaCumprir(null);
-    setCumprimentoFormData({ data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: '' });
+  // const resetCumprimentoForm = () => { // Removido
+  //   setCondicionanteParaCumprir(null);
+  //   setCumprimentoFormData({ data_cumprimento: null, data_envio_comprovante: null, anexo_comprovante: null, observacoes_cumprimento: '' });
+  // };
+
+  const handleMarcarCumprida = async (condicionanteId) => {
+    setIsSavingCondicionante(true); // Reutilizar este estado para indicar carregamento
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/condicionantes/${condicionanteId}/marcar-cumprida-rapido`, { // Novo endpoint
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        // Não precisa de body se a data for definida no backend
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+      }
+      fetchCondicionantesELicencas(); // Re-fetch para atualizar a lista
+      toast.success("Condicionante marcada como cumprida!");
+    } catch (error) {
+      console.error('Erro ao marcar condicionante como cumprida:', error);
+      toast.error(`Erro: ${error.message}`);
+    } finally {
+      setIsSavingCondicionante(false);
+    }
+  };
+
+  const handleMarcarPendente = async (condicionanteId) => {
+    if (!confirm('Tem certeza que deseja marcar esta condicionante como pendente?')) {
+      return;
+    }
+    setIsSavingCondicionante(true); // Reutilizar este estado para indicar carregamento
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/condicionantes/${condicionanteId}/marcar-pendente`, { // Novo endpoint
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.erro || `HTTP error! status: ${response.status}`);
+      }
+      fetchCondicionantesELicencas(); // Re-fetch para atualizar a lista
+      toast.success("Condicionante marcada como pendente!");
+    } catch (error) {
+      console.error('Erro ao marcar condicionante como pendente:', error);
+      toast.error(`Erro: ${error.message}`);
+    } finally {
+      setIsSavingCondicionante(false);
+    }
   };
 
   const getStatusBadge = (status, diasRestantes, cumprida) => {
+    // A lógica de 'cumprida' agora vem diretamente do estado da condicionante (c.status === 'cumprida' ou c.cumprida)
     if (cumprida) return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-700/30 dark:text-green-300">Cumprida</Badge>;
     if (status === 'vencida' || (!cumprida && diasRestantes < 0) ) return <Badge variant="destructive">Vencida</Badge>;
     if (diasRestantes <= 7) return <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-700/30 dark:text-red-300">Urgente</Badge>;
@@ -538,86 +582,7 @@ export function GestaoCondicionantes() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog para Registrar Cumprimento */}
-      <Dialog open={cumprimentoDialogOpen} onOpenChange={(isOpen) => {
-        if (!isSavingCumprimento) setCumprimentoDialogOpen(isOpen);
-        if (!isOpen) {
-          resetCumprimentoForm();
-        }
-      }}>
-        <DialogContent className="max-w-2xl"> {/* Alterado de max-w-lg para max-w-2xl */}
-          <DialogHeader>
-            <DialogTitle>Registrar Cumprimento da Condicionante #{condicionanteParaCumprir?.id}</DialogTitle>
-            {condicionanteParaCumprir && <DialogDescription className="pt-1 text-sm text-muted-foreground truncate">{condicionanteParaCumprir.descricao}</DialogDescription>}
-          </DialogHeader>
-          <div className="w-full"> {/* Wrapper adicionado */}
-            <form onSubmit={(e) => { e.preventDefault(); handleSaveCumprimento(); }} className="space-y-4 pt-4 w-full"> {/* w-full adicionado ao form */}
-              <div className="space-y-2">
-                <Label htmlFor="data_cumprimento">Data de Cumprimento *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {cumprimentoFormData.data_cumprimento ? format(cumprimentoFormData.data_cumprimento, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={cumprimentoFormData.data_cumprimento}
-                    onSelect={(date) => setCumprimentoFormData(prev => ({ ...prev, data_cumprimento: date }))}
-                    initialFocus
-                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="anexo_comprovante">Anexo Comprovante</Label>
-              <Input
-                id="anexo_comprovante"
-                type="file"
-                onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, anexo_comprovante: e.target.files ? e.target.files[0] : null }))}
-                className="w-full"
-              />
-              {/* Preview do nome do arquivo existente, se houver e for string (path) */}
-              {condicionanteParaCumprir?.anexo_comprovante && typeof condicionanteParaCumprir.anexo_comprovante === 'string' && !cumprimentoFormData.anexo_comprovante && (
-                <p className="text-xs text-muted-foreground">
-                  Anexo atual: <a href={`${API_BASE_URL}/uploads/${condicionanteParaCumprir.anexo_comprovante}`} target="_blank" rel="noopener noreferrer" className="underline">{condicionanteParaCumprir.anexo_comprovante.split('/').pop()}</a>
-                  <br/>(Selecionar um novo arquivo irá substituí-lo)
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="observacoes_cumprimento">Observações do Cumprimento</Label>
-              <Textarea
-                id="observacoes_cumprimento"
-                value={cumprimentoFormData.observacoes_cumprimento}
-                onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, observacoes_cumprimento: e.target.value }))}
-                placeholder="Descreva as ações tomadas para o cumprimento..."
-                rows={3}
-                className="w-full"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setCumprimentoDialogOpen(false); resetCumprimentoForm(); }} disabled={isSavingCumprimento}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={!cumprimentoFormData.data_cumprimento || isSavingCumprimento}>
-                {isSavingCumprimento && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar Cumprimento
-              </Button>
-            </div>
-          </form>
-        </div> {/* Fechamento do Wrapper adicionado */}
-        </DialogContent>
-      </Dialog>
+      {/* Dialog para Registrar Cumprimento FOI REMOVIDO */}
 
       {/* Card e lista de condicionantes - FORA DO DIALOG DO FORMULÁRIO */}
       {(!loading || condicionantes.length > 0) && (
@@ -648,29 +613,40 @@ export function GestaoCondicionantes() {
                         {c.responsavel && (<div className="col-span-full sm:col-span-1"><User className="h-3 w-3 inline mr-1.5" /><strong>Responsável:</strong> {c.responsavel}</div>)}
                       </div>
                       {c.observacoes && (<p className="text-xs text-gray-500 dark:text-gray-400 pt-1 italic"><strong>Obs.:</strong> {c.observacoes}</p>)}
-                      {c.cumprida && (
+                      {c.cumprida && c.data_envio_cumprimento && ( // Adicionado c.data_envio_cumprimento para garantir que a data exista
                         <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/30 rounded-md border border-green-200 dark:border-green-700 text-xs space-y-1">
-                          <p className="font-semibold text-green-700 dark:text-green-300">Detalhes do Cumprimento:</p>
-                          <p><strong>Data:</strong> {new Date(c.data_cumprimento).toLocaleDateString('pt-BR')}</p>
-                          {c.data_envio_comprovante && (<p><strong>Envio:</strong> {new Date(c.data_envio_comprovante).toLocaleDateString('pt-BR')}</p>)}
-                          {c.anexo_comprovante && (<p className="flex items-center"><Paperclip className="h-3 w-3 mr-1.5 text-gray-500" /><strong>Anexo:</strong> {c.anexo_comprovante}</p>)}
-                          {c.observacoes_cumprimento && (<p><strong>Obs. Cumprimento:</strong> {c.observacoes_cumprimento}</p>)}
+                          <p className="font-semibold text-green-700 dark:text-green-300">Cumprida em:</p>
+                          <p><strong>Data:</strong> {new Date(c.data_envio_cumprimento + "T00:00:00Z").toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p> {/* Adicionado T00:00:00Z e UTC para consistência */}
+                          {/* Campos de anexo e observações de cumprimento foram removidos conforme solicitado */}
                         </div>
                       )}
                     </div>
                     <div className="flex flex-col space-y-2 md:w-auto w-full pt-2 md:pt-0">
-                      {!c.cumprida && (
-                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-green-600 hover:text-green-700 border-green-300 hover:bg-green-50 dark:border-green-600 dark:hover:bg-green-700/20 w-full">
-                          <CheckCircle className="h-4 w-4 mr-2" />Registrar Cumprimento
+                      {!c.cumprida ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMarcarCumprida(c.id)}
+                          className="text-green-600 hover:text-green-700 border-green-300 hover:bg-green-50 dark:border-green-600 dark:hover:bg-green-700/20 w-full"
+                          disabled={isSavingCondicionante} // Usar isSavingCondicionante
+                        >
+                          {isSavingCondicionante ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                          Marcar como Cumprida
                         </Button>
-                      )}
-                      {c.cumprida && (
-                        <Button variant="outline" size="sm" onClick={() => handleOpenCumprimentoDialog(c)} className="text-blue-600 hover:text-blue-700 border-blue-300 hover:bg-blue-50 dark:border-blue-600 dark:hover:bg-blue-700/20 w-full">
-                          <Edit className="h-3.5 w-3.5 mr-2" />Editar Cumprimento
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleMarcarPendente(c.id)}
+                          className="text-orange-600 hover:text-orange-700 border-orange-300 hover:bg-orange-50 dark:border-orange-600 dark:hover:bg-orange-700/20 w-full"
+                          disabled={isSavingCondicionante} // Usar isSavingCondicionante
+                        >
+                          {isSavingCondicionante ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Clock className="h-3.5 w-3.5 mr-2" />}
+                          Marcar como Pendente
                         </Button>
                       )}
                       <div className="flex space-x-2 w-full">
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(c)} className="flex-1" disabled={c.cumprida}><Edit className="h-3.5 w-3.5" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(c)} className="flex-1" disabled={c.cumprida /* Manter desabilitado se cumprida, pois a edição simplificada é via 'Marcar Pendente' */}><Edit className="h-3.5 w-3.5" /></Button>
                         <Button variant="outline" size="sm" onClick={() => handleDelete(c.id)} className="flex-1 text-red-600 hover:text-red-700 border-red-300 hover:bg-red-50 dark:border-red-600 dark:hover:bg-red-700/20"><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </div>
