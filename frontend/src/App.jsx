@@ -8,26 +8,27 @@ import { GestaoLicencas } from './components/GestaoLicencas.jsx'
 import { GestaoCondicionantes } from './components/GestaoCondicionantes.jsx'
 import { GoogleCalendarIntegration } from './components/GoogleCalendarIntegration.jsx'
 import { Toaster } from '@/components/ui/sonner.jsx' // Importar o Toaster
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css'
 
 // Definindo a URL base da API do backend
-// Prioriza a variável de ambiente, com fallback para o localhost (desenvolvimento) ou uma URL de produção hardcoded se necessário.
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-// Se souber a URL de produção final do backend no Render, pode usar como fallback final:
-// const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://seu-backend-no-render.onrender.com';
-
 
 import { Skeleton } from "@/components/ui/skeleton" // Importar Skeleton
+import { LoginPage } from './components/LoginPage.jsx'; // Importar LoginPage
+import { AuthProvider } from './contexts/AuthContext.jsx'; // Importar AuthProvider
+import { ProtectedRoute } from './components/ProtectedRoute.jsx'; // Importar ProtectedRoute
 
-// Componente do Dashboard
-function Dashboard({ resumo, loadingResumo } ) { // Adicionado loadingResumo
+// Componente do Dashboard (conteúdo original do Dashboard)
+function DashboardContent({ resumo, loadingResumo } ) {
   const [urgentActions, setUrgentActions] = useState([]);
-  const [loadingUrgentActions, setLoadingUrgentActions] = useState(true); // Estado de carregamento para ações urgentes
+  const [loadingUrgentActions, setLoadingUrgentActions] = useState(true);
 
   useEffect(() => {
     const fetchUrgentActions = async () => {
       setLoadingUrgentActions(true);
       try {
+        // TODO: Usar token JWT para autenticar esta chamada se necessário no futuro
         const response = await fetch(`${API_BASE_URL}/api/condicionantes/urgentes`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -36,14 +37,14 @@ function Dashboard({ resumo, loadingResumo } ) { // Adicionado loadingResumo
         setUrgentActions(data);
       } catch (error) {
         console.error("Erro ao buscar ações urgentes:", error);
-        setUrgentActions([]); // Define como vazio em caso de erro
+        setUrgentActions([]);
       } finally {
         setLoadingUrgentActions(false);
       }
     };
 
     fetchUrgentActions();
-  }, []); // API_BASE_URL é definido fora, não precisa ser dependência aqui se não mudar em runtime
+  }, []);
 
   const getBadgeVariant = (diasRestantes) => {
     if (diasRestantes < 0) return "destructive";
@@ -142,12 +143,11 @@ function Dashboard({ resumo, loadingResumo } ) { // Adicionado loadingResumo
   );
 }
 
-// Componente principal da aplicação
-function App() {
-  const [resumo, setResumo] = useState(null); // Inicializa como null para facilitar o estado de carregamento
+
+// Componente que representa o Layout Principal da Aplicação (antigo App)
+function MainLayout() {
+  const [resumo, setResumo] = useState(null);
   const [loadingResumo, setLoadingResumo] = useState(true);
-  // const [activeTab, setActiveTab] = useState("dashboard");
-  // Persistência da aba ativa
   const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem('activeLicenciamentoTab');
     return savedTab || 'dashboard';
@@ -157,7 +157,6 @@ function App() {
     localStorage.setItem('activeLicenciamentoTab', activeTab);
   }, [activeTab]);
 
-  // Estados para o formulário de Licença (elevados de GestaoLicencas)
   const [licencaDialogOpen, setLicencaDialogOpen] = useState(false);
   const [editingLicenca, setEditingLicenca] = useState(null);
   const [licencaFormData, setLicencaFormData] = useState({
@@ -172,9 +171,9 @@ function App() {
   const [empresasParaSelect, setEmpresasParaSelect] = useState([]);
   const [todasAsCondicionantes, setTodasAsCondicionantes] = useState([]);
 
-  // Função para buscar/atualizar empresas para o select, pode ser chamada externamente se necessário
   const fetchEmpresasParaSelect = async () => {
     try {
+      // TODO: Usar token JWT para autenticar esta chamada
       const response = await fetch(`${API_BASE_URL}/api/empresas`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -200,10 +199,10 @@ function App() {
     });
   };
 
-  // Movendo as funções de fetch para fora do useEffect para que possam ser chamadas por outros handlers
   const fetchDashboardSummary = async () => {
     setLoadingResumo(true);
     try {
+      // TODO: Usar token JWT para autenticar esta chamada
       const response = await fetch(`${API_BASE_URL}/api/dashboard/resumo`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -219,18 +218,15 @@ function App() {
       });
     } catch (error) {
       console.error("Erro ao buscar resumo do dashboard:", error);
-      setResumo({ total_empresas: 0, total_licencas: 0, licencas_vencendo: 0, licencas_vencidas: 0, condicionantes_urgentes: 0, condicionantes_vencidas: 0 }); // Fallback
+      setResumo({ total_empresas: 0, total_licencas: 0, licencas_vencendo: 0, licencas_vencidas: 0, condicionantes_urgentes: 0, condicionantes_vencidas: 0 });
     } finally {
       setLoadingResumo(false);
     }
   };
 
-  // A função fetchEmpresasParaSelect já está definida fora (no escopo do componente App)
-  // Vamos garantir que ela também esteja fora do useEffect para ser reutilizável.
-  // (Ela já estava fora, mas confirmando a intenção)
-
   const fetchTodasCondicionantes = async () => {
     try {
+      // TODO: Usar token JWT para autenticar esta chamada
       const response = await fetch(`${API_BASE_URL}/api/condicionantes`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -251,7 +247,6 @@ function App() {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      // Promise.all para carregar dados em paralelo
       await Promise.all([
         fetchDashboardSummary(),
         fetchEmpresasParaSelect(),
@@ -259,22 +254,19 @@ function App() {
       ]);
     };
     loadInitialData();
-  }, [API_BASE_URL]); // Dependência API_BASE_URL é importante aqui
+  }, []);
 
-  // Callback para ser chamado por GestaoEmpresas após um novo cadastro/edição
   const handleEmpresaAtualizada = () => {
-    fetchEmpresasParaSelect(); // Re-busca as empresas para o select
-    fetchDashboardSummary();   // Re-busca o resumo do dashboard
+    fetchEmpresasParaSelect();
+    fetchDashboardSummary();
   };
 
   const handleOpenNovaLicencaDialog = () => {
-    resetLicencaForm(); // Reseta o formulário e a licença em edição
+    resetLicencaForm();
     setLicencaDialogOpen(true);
-    setActiveTab("licencas"); // Mudar para a aba de licenças
+    setActiveTab("licencas");
   };
 
-  // Função para ser passada como setDialogOpen para GestaoLicencas
-  // Garante que o formulário seja resetado ao fechar o dialog
   const handleLicencaDialogOpenChange = (isOpen) => {
     setLicencaDialogOpen(isOpen);
     if (!isOpen) {
@@ -309,10 +301,11 @@ function App() {
             <TabsTrigger value="empresas">Empresas</TabsTrigger>
             <TabsTrigger value="licencas">Licenças</TabsTrigger>
             <TabsTrigger value="condicionantes">Condicionantes</TabsTrigger>
+            {/* TODO: Adicionar aba de "Gerenciar Usuários" condicionalmente para admins */}
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
-            <Dashboard resumo={resumo} loadingResumo={loadingResumo} />
+            <DashboardContent resumo={resumo} loadingResumo={loadingResumo} />
           </TabsContent>
 
           <TabsContent value="empresas" className="space-y-6">
@@ -323,13 +316,13 @@ function App() {
             <GestaoLicencas
               API_BASE_URL={API_BASE_URL}
               dialogOpen={licencaDialogOpen}
-              setDialogOpen={handleLicencaDialogOpenChange} // Usar a nova função
+              setDialogOpen={handleLicencaDialogOpenChange}
               editingLicenca={editingLicenca}
               setEditingLicenca={setEditingLicenca}
               formData={licencaFormData}
               setFormData={setLicencaFormData}
               empresas={empresasParaSelect}
-              todasAsCondicionantes={todasAsCondicionantes} // Passando todas as condicionantes
+              todasAsCondicionantes={todasAsCondicionantes}
             />
           </TabsContent>
 
@@ -338,8 +331,40 @@ function App() {
           </TabsContent>
         </Tabs>
       </main>
-      <Toaster richColors /> {/* Adicionar o componente Toaster aqui */}
+      <Toaster richColors />
     </div>
+  );
+}
+
+// Componente App principal agora apenas configura o Router
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          />
+          {/* Exemplo de rota específica para admin no futuro:
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={['administrador']}>
+                <UserManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          */}
+          <Route path="*" element={<Navigate to="/" />} /> {/* Redireciona rotas não encontradas */}
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 
