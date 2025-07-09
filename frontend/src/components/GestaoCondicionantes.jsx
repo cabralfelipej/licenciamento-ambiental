@@ -474,7 +474,7 @@ export function GestaoCondicionantes() {
           </DialogTrigger>
         </div>
 
-        <DialogContent className="max-w-lg overflow-y-auto"> {/* Reduzido para max-w-lg para melhor layout */}
+        <DialogContent className="max-w-2xl overflow-y-auto"> {/* Mantendo max-w-2xl para consistência */}
           <DialogHeader>
             <DialogTitle>{editingCondicionante ? 'Editar Condicionante' : 'Nova Condicionante'}</DialogTitle>
             <DialogDescription>Preencha os dados da condicionante da licença.</DialogDescription>
@@ -482,16 +482,18 @@ export function GestaoCondicionantes() {
           <div className="w-full"> {/* Wrapper adicionado */}
             <form onSubmit={handleSubmit} className="space-y-4 pt-4 w-full"> {/* w-full adicionado ao form */}
               {/* Campos do formulário */}
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0">
                 <Label htmlFor="cond_licenca_id">Licença *</Label>
               <Select value={formData.licenca_id} onValueChange={(v) => setFormData(p => ({ ...p, licenca_id: v }))} required>
-                <SelectTrigger id="cond_licenca_id" className="max-w-md overflow-hidden">
-                  <SelectValue placeholder="Selecione a licença" className="truncate" />
+                <SelectTrigger id="cond_licenca_id" className="w-full overflow-hidden truncate">
+                  {/* Simplificado para aplicar truncate diretamente no trigger.
+                      Pode ser necessário ajustar se o ícone do select for sobreposto. */}
+                  <SelectValue placeholder="Selecione a licença" />
                 </SelectTrigger>
-                <SelectContent className="max-w-md">
+                <SelectContent>
                   {licencas.map(l => (
                     <SelectItem key={l.id} value={l.id.toString()}>
-                      <span className="block truncate max-w-xs">{l.numero} - {l.tipo} ({l.empresa_nome})</span>
+                      <span className="block truncate">{l.numero} - {l.tipo} ({l.empresa_nome})</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -499,9 +501,9 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cond_descricao">Descrição da Condicionante *</Label>
-              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required className="max-w-md" />
+              <Textarea id="cond_descricao" value={formData.descricao} onChange={e => setFormData(p => ({ ...p, descricao: e.target.value }))} placeholder="Descreva a condicionante..." rows={3} required className="w-full" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start max-w-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <div className="space-y-2">
                 <Label htmlFor="cond_prazo_dias">Prazo em Dias</Label>
                 <Select
@@ -513,7 +515,7 @@ export function GestaoCondicionantes() {
                   }}
                   disabled={isRenovacao}
                 >
-                  <SelectTrigger id="cond_prazo_dias" className="max-w-32">
+                  <SelectTrigger id="cond_prazo_dias" className="w-full">
                     <SelectValue placeholder="Selecione um prazo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -540,7 +542,6 @@ export function GestaoCondicionantes() {
                     }
                   }}
                   disabled={isRenovacao}
-                  className="max-w-36"
                 />
                  <p className="text-xs text-muted-foreground">Preenchido automaticamente ou manualmente.</p>
               </div>
@@ -562,11 +563,11 @@ export function GestaoCondicionantes() {
             </div>
             <div className="space-y-2 pt-2">
               <Label htmlFor="cond_responsavel">Responsável</Label>
-              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" className="max-w-md" />
+              <Input id="cond_responsavel" value={formData.responsavel} onChange={e => setFormData(p => ({ ...p, responsavel: e.target.value }))} placeholder="Ex: Depto. Ambiental" className="w-full" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="cond_observacoes">Observações</Label>
-              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} className="max-w-md" />
+              <Textarea id="cond_observacoes" value={formData.observacoes} onChange={e => setFormData(p => ({ ...p, observacoes: e.target.value }))} placeholder="Notas adicionais..." rows={2} className="w-full" />
             </div>
             {/* Botões do formulário */}
             <div className="flex justify-end space-x-2 pt-2">
@@ -574,6 +575,87 @@ export function GestaoCondicionantes() {
               <Button type="submit" disabled={isSavingCondicionante}>
                 {isSavingCondicionante && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {editingCondicionante ? 'Atualizar' : 'Cadastrar'}
+              </Button>
+            </div>
+          </form>
+        </div> {/* Fechamento do Wrapper adicionado */}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para Registrar Cumprimento */}
+      <Dialog open={cumprimentoDialogOpen} onOpenChange={(isOpen) => {
+        if (!isSavingCumprimento) setCumprimentoDialogOpen(isOpen);
+        if (!isOpen) {
+          resetCumprimentoForm();
+        }
+      }}>
+        <DialogContent className="max-w-lg"> {/* Reduzido para max-w-lg para melhor layout */}
+          <DialogHeader>
+            <DialogTitle>Registrar Cumprimento da Condicionante #{condicionanteParaCumprir?.id}</DialogTitle>
+            {condicionanteParaCumprir && <DialogDescription className="pt-1 text-sm text-muted-foreground truncate">{condicionanteParaCumprir.descricao}</DialogDescription>}
+          </DialogHeader>
+          <div className="w-full"> {/* Wrapper adicionado */}
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveCumprimento(); }} className="space-y-4 pt-4 w-full"> {/* w-full adicionado ao form */}
+              <div className="space-y-2">
+                <Label htmlFor="data_cumprimento">Data de Cumprimento *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="justify-start text-left font-normal max-w-64"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {cumprimentoFormData.data_cumprimento ? format(cumprimentoFormData.data_cumprimento, "PPP", { locale: ptBR }) : <span>Selecione uma data</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={cumprimentoFormData.data_cumprimento}
+                    onSelect={(date) => setCumprimentoFormData(prev => ({ ...prev, data_cumprimento: date }))}
+                    initialFocus
+                    disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="anexo_comprovante">Anexo Comprovante</Label>
+              <Input
+                id="anexo_comprovante"
+                type="file"
+                onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, anexo_comprovante: e.target.files ? e.target.files[0] : null }))}
+                className="max-w-md"
+              />
+              {/* Preview do nome do arquivo existente, se houver e for string (path) */}
+              {condicionanteParaCumprir?.anexo_comprovante && typeof condicionanteParaCumprir.anexo_comprovante === 'string' && !cumprimentoFormData.anexo_comprovante && (
+                <p className="text-xs text-muted-foreground">
+                  Anexo atual: <a href={`${API_BASE_URL}/uploads/${condicionanteParaCumprir.anexo_comprovante}`} target="_blank" rel="noopener noreferrer" className="underline">{condicionanteParaCumprir.anexo_comprovante.split('/').pop()}</a>
+                  <br/>(Selecionar um novo arquivo irá substituí-lo)
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="observacoes_cumprimento">Observações do Cumprimento</Label>
+              <Textarea
+                id="observacoes_cumprimento"
+                value={cumprimentoFormData.observacoes_cumprimento}
+                onChange={(e) => setCumprimentoFormData(prev => ({ ...prev, observacoes_cumprimento: e.target.value }))}
+                placeholder="Descreva as ações tomadas para o cumprimento..."
+                rows={3}
+                className="max-w-md"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setCumprimentoDialogOpen(false); resetCumprimentoForm(); }} disabled={isSavingCumprimento}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={!cumprimentoFormData.data_cumprimento || isSavingCumprimento}>
+                {isSavingCumprimento && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar Cumprimento
               </Button>
             </div>
           </form>
